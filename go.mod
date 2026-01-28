@@ -3,7 +3,7 @@ module go-polymarket-sdk
 go 1.24.0
 
 require (
-	github.com/ethereum/go-ethereum v1.16.7
+	github.com/ethereum/go-ethereum v1.16.8
 	github.com/gorilla/websocket v1.5.3
 	github.com/shopspring/decimal v1.4.0
 )
