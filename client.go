@@ -27,48 +27,42 @@ type Client struct {
 
 // NewClient creates a new root client with optional overrides.
 func NewClient(opts ...Option) *Client {
+	// 1. Initialize with default configuration
 	c := &Client{Config: DefaultConfig()}
+
+	// 2. Initialize default transports
+	// We need these base transports to be ready so Options can modify them
+	clobTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.CLOB)
+	clobTransport.SetUserAgent(c.Config.UserAgent)
+	clobTransport.SetUseServerTime(c.Config.UseServerTime)
+
+	gammaTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Gamma)
+	gammaTransport.SetUserAgent(c.Config.UserAgent)
+
+	dataTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Data)
+	dataTransport.SetUserAgent(c.Config.UserAgent)
+
+	bridgeTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Bridge)
+	bridgeTransport.SetUserAgent(c.Config.UserAgent)
+
+	// 3. Initialize default clients
+	c.clob = clob.NewClientWithGeoblock(clobTransport, c.Config.BaseURLs.Geoblock)
+	c.gamma = gamma.NewClient(gammaTransport)
+	c.data = data.NewClient(dataTransport)
+	c.bridge = bridge.NewClient(bridgeTransport)
+	c.ctf = ctf.NewClient()
+	
+	// Default WS URL
+	wsURL := c.Config.BaseURLs.CLOBWS
+	if wsURL == "" {
+		wsURL = ws.ProdBaseURL
+	}
+	c.clobws, _ = ws.NewClient(wsURL, nil, nil)
+
+	// 4. Apply Options (Overrides)
+	// Now that clients exist, options like WithBuilderAttribution can modify them
 	for _, opt := range opts {
 		opt(c)
-	}
-
-	if c.CLOB == nil {
-		clobTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.CLOB)
-		clobTransport.SetUserAgent(c.Config.UserAgent)
-		clobTransport.SetUseServerTime(c.Config.UseServerTime)
-		c.CLOB = clob.NewClientWithGeoblock(clobTransport, c.Config.BaseURLs.Geoblock)
-	}
-
-	if c.CLOBWS == nil {
-		wsURL := c.Config.BaseURLs.CLOBWS
-		if wsURL == "" {
-			wsURL = ws.ProdBaseURL
-		}
-		// Note: Root client initialization of WS might not have signer/apiKey yet.
-		// These will be set when WithAuth is called on the root client or CLOB client.
-		c.CLOBWS, _ = ws.NewClient(wsURL, nil, nil)
-	}
-
-	if c.Gamma == nil {
-		gammaTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Gamma)
-		gammaTransport.SetUserAgent(c.Config.UserAgent)
-		c.Gamma = gamma.NewClient(gammaTransport)
-	}
-
-	if c.Data == nil {
-		dataTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Data)
-		dataTransport.SetUserAgent(c.Config.UserAgent)
-		c.Data = data.NewClient(dataTransport)
-	}
-
-	if c.Bridge == nil {
-		bridgeTransport := transport.NewClient(c.Config.HTTPClient, c.Config.BaseURLs.Bridge)
-		bridgeTransport.SetUserAgent(c.Config.UserAgent)
-		c.Bridge = bridge.NewClient(bridgeTransport)
-	}
-
-	if c.CTF == nil {
-		c.CTF = ctf.NewClient()
 	}
 
 	return c

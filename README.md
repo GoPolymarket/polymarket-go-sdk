@@ -18,18 +18,19 @@ This SDK is architecturally aligned with the official [rs-clob-client](https://g
 
 ## 🏗 Architecture
 
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a deep dive into the modular design.
+
 ```text
 pkg/
 ├── auth/              # Auth & Signing (EOA, AWS KMS)
+│   ├── kms/           # AWS KMS Integration (EIP-712)
+│   └── ...
 ├── clob/              # CLOB REST Core
-│   ├── clobtypes/     # Shared Domain Types
-│   ├── rfq/           # RFQ Module
-│   ├── ws/            # WebSocket Subsystem
-│   └── heartbeat/     # Liveness Management
-├── gamma/             # Gamma API
-├── data/              # Data API
-└── ctf/               # CTF On-chain Operations
 ```
+
+## 🔐 Security & AWS KMS
+
+See [docs/SECURITY.md](docs/SECURITY.md) for details on AWS KMS integration and the security model of the remote builder signer.
 
 ## 🚀 Installation
 
