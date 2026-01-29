@@ -27,6 +27,7 @@ type Client interface {
 	Geoblock(ctx context.Context) (clobtypes.GeoblockResponse, error)
 
 	Markets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error)
+	MarketsAll(ctx context.Context, req *clobtypes.MarketsRequest) ([]clobtypes.Market, error)
 	Market(ctx context.Context, id string) (clobtypes.MarketResponse, error)
 	SimplifiedMarkets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error)
 	SamplingMarkets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error)

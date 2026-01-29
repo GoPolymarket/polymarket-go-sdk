@@ -50,18 +50,6 @@ func (s *subscriptionEntry[T]) matchesMarket(market string) bool {
 	return ok
 }
 
-func (s *subscriptionEntry[T]) matchesAnyMarket(markets []string) bool {
-	if len(s.markets) == 0 {
-		return true
-	}
-	for _, m := range markets {
-		if _, ok := s.markets[m]; ok {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *subscriptionEntry[T]) trySend(msg T) {
 	if s.closed.Load() {
 		return
