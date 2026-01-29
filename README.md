@@ -152,17 +152,48 @@ if err != nil {
 fmt.Printf("Fetched %d active markets\n", len(allMarkets))
 ```
 
+## 🛡️ Best Practices
+
+### 1. Structured Error Handling
+
+The SDK provides typed errors in `pkg/clob/cloberrors` to help you handle trading failures programmatically.
+
+```go
+import (
+    "errors"
+    "github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/cloberrors"
+)
+
+resp, err := client.CLOB().CreateOrder(ctx, order)
+if err != nil {
+    if errors.Is(err, cloberrors.ErrInsufficientFunds) {
+        fmt.Println("Please deposit more USDC")
+    } else if errors.Is(err, cloberrors.ErrRateLimitExceeded) {
+        fmt.Println("Backing off due to rate limits...")
+    }
+}
+```
+
+### 2. High-Precision Orders
+
+Always use `decimal.Decimal` (via `PriceDec` or `SizeDec`) when precision is critical to avoid floating-point issues common in financial applications.
+
+```go
+builder.PriceDec(decimal.NewFromFloat(0.5001)).
+        SizeDec(decimal.NewFromInt(100))
+```
+
 ## 🗺 Roadmap
 
 We are committed to maintaining this SDK as the best-in-class solution for Polymarket.
 
 - [x] **Core CLOB REST API**: Complete coverage of Order, Market, and Account endpoints.
-- [x] **WebSocket Client**: Robust, auto-reconnecting stream client.
+- [x] **WebSocket Client**: Robust, auto-reconnecting stream client with heartbeat.
 - [x] **Authentication**: Support for EOA, Proxy, Safe, and AWS KMS.
-- [x] **Pagination**: Helper methods for automatic resource iteration.
-- [x] **CI/CD**: Linting, Testing, and Coverage enforcement.
-- [ ] **Gamma API**: Full integration with the Gamma (Market Metadata) API.
-- [ ] **CTF Exchange**: Direct interaction with the CTF Exchange contract.
+- [x] **Pagination**: Helper methods for automatic resource iteration (`MarketsAll`, `OrdersAll`).
+- [x] **Gamma API**: Read-only metadata and discovery services.
+- [x] **CI/CD**: Linting, Testing, and strictly enforced Coverage.
+- [ ] **CTF Exchange**: Direct interaction with the CTF Exchange contract for on-chain actions.
 - [ ] **CLI Tool**: A standalone CLI for managing orders and keys.
 
 ## 🤝 Contributing

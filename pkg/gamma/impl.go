@@ -1,3 +1,4 @@
+// Package gamma provides the implementation for the Polymarket Gamma metadata service.
 package gamma
 
 import (
@@ -10,6 +11,7 @@ import (
 )
 
 const (
+	// BaseURL is the default production endpoint for Gamma.
 	BaseURL = "https://gamma-api.polymarket.com"
 )
 
@@ -17,6 +19,7 @@ type clientImpl struct {
 	httpClient *transport.Client
 }
 
+// NewClient creates a new Gamma API client.
 func NewClient(httpClient *transport.Client) Client {
 	if httpClient == nil {
 		httpClient = transport.NewClient(nil, BaseURL)

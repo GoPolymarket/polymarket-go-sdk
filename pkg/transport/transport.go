@@ -1,3 +1,6 @@
+// Package transport provides a robust HTTP client wrapper optimized for Polymarket's API.
+// It handles automatic L2 HMAC authentication, builder attribution, retries with
+// exponential backoff, and unified error handling.
 package transport
 
 import (
@@ -22,12 +25,15 @@ const (
 	defaultMaxWait    = 2 * time.Second
 )
 
-// Doer matches http.Client's Do method.
+// Doer defines the interface for executing an HTTP request.
+// It matches the standard *http.Client's Do method.
 type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Client is a wrapper around http.Client that handles common API tasks.
+// Client is a high-level wrapper around an HTTP Doer.
+// It adds Polymarket-specific functionality like automatic HMAC signing
+// and transparent request retries for ephemeral server errors.
 type Client struct {
 	httpClient    Doer
 	baseURL       string
@@ -39,6 +45,7 @@ type Client struct {
 }
 
 // NewClient creates a new transport client.
+// If httpClient is nil, http.DefaultClient will be used.
 func NewClient(httpClient Doer, baseURL string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
@@ -53,8 +60,8 @@ func NewClient(httpClient Doer, baseURL string) *Client {
 	}
 }
 
-// CloneWithBaseURL creates a new client with the same HTTP doer and user agent,
-// but a different base URL. Auth/builder config are intentionally not copied.
+// CloneWithBaseURL creates a new client sharing the same underlying HTTP Doer
+// but targeting a different base URL (e.g., for specialized sub-services).
 func (c *Client) CloneWithBaseURL(baseURL string) *Client {
 	if c == nil {
 		return NewClient(nil, baseURL)
@@ -65,30 +72,32 @@ func (c *Client) CloneWithBaseURL(baseURL string) *Client {
 	return clone
 }
 
-// SetUserAgent overrides the default user agent.
+// SetUserAgent sets the User-Agent header value for all subsequent requests.
 func (c *Client) SetUserAgent(userAgent string) {
 	if userAgent != "" {
 		c.userAgent = userAgent
 	}
 }
 
-// SetAuth sets the credentials for L2 authentication.
+// SetAuth configures the client with credentials for Layer 2 HMAC authentication.
 func (c *Client) SetAuth(signer auth.Signer, apiKey *auth.APIKey) {
 	c.signer = signer
 	c.apiKey = apiKey
 }
 
-// SetBuilderConfig sets the builder config for extra builder headers.
+// SetBuilderConfig configures the client for builder attribution headers.
 func (c *Client) SetBuilderConfig(config *auth.BuilderConfig) {
 	c.builder = config
 }
 
-// SetUseServerTime enables or disables server-time signing.
+// SetUseServerTime enables or disables server-time synchronization for signatures.
 func (c *Client) SetUseServerTime(use bool) {
 	c.useServerTime = use
 }
 
-// Call executes an HTTP request.
+// Call is the core method for executing HTTP requests.
+// It handles payload serialization, authentication header injection, and retry logic.
+// Retryable errors include HTTP 429 (Rate Limit) and 5xx (Server Error).
 func (c *Client) Call(ctx context.Context, method, path string, query url.Values, body interface{}, dest interface{}, headers map[string]string) error {
 	u := c.baseURL + "/" + strings.TrimLeft(path, "/")
 
@@ -279,22 +288,22 @@ func (c *Client) serverTime(ctx context.Context) (int64, error) {
 	return 0, fmt.Errorf("invalid server time response")
 }
 
-// Get performs a GET request.
+// Get performs a GET request with automatic L2 authentication if credentials are provided.
 func (c *Client) Get(ctx context.Context, path string, query url.Values, dest interface{}) error {
 	return c.Call(ctx, http.MethodGet, path, query, nil, dest, nil)
 }
 
-// Post performs a POST request.
+// Post performs a POST request with automatic L2 authentication if credentials are provided.
 func (c *Client) Post(ctx context.Context, path string, body interface{}, dest interface{}) error {
 	return c.Call(ctx, http.MethodPost, path, nil, body, dest, nil)
 }
 
-// Delete performs a DELETE request.
+// Delete performs a DELETE request with automatic L2 authentication if credentials are provided.
 func (c *Client) Delete(ctx context.Context, path string, body interface{}, dest interface{}) error {
 	return c.Call(ctx, http.MethodDelete, path, nil, body, dest, nil)
 }
 
-// CallWithHeaders executes an HTTP request with custom headers.
+// CallWithHeaders executes an HTTP request with custom headers and automatic L2 authentication.
 func (c *Client) CallWithHeaders(ctx context.Context, method, path string, query url.Values, body interface{}, dest interface{}, headers map[string]string) error {
 	return c.Call(ctx, method, path, query, body, dest, headers)
 }

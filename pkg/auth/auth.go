@@ -1,3 +1,7 @@
+// Package auth provides cryptographic primitives for Polymarket authentication.
+// It supports L1 (EIP-712) signing for account management and L2 (HMAC) signing
+// for high-frequency trading operations. It also includes utilities for
+// deterministic wallet derivation (Proxy and Gnosis Safe).
 package auth
 
 import (
@@ -22,13 +26,13 @@ import (
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 )
 
-// ClobAuthDomain is the EIP-712 domain for ClobAuth.
+// ClobAuthDomain is the EIP-712 domain used for CLOB authentication requests.
 var ClobAuthDomain = &apitypes.TypedDataDomain{
 	Name:    "ClobAuthDomain",
 	Version: "1",
 }
 
-// ClobAuthTypes defines the EIP-712 types for ClobAuth.
+// ClobAuthTypes defines the EIP-712 type schemas for CLOB authentication.
 var ClobAuthTypes = apitypes.Types{
 	"EIP712Domain": {
 		{Name: "name", Type: "string"},
@@ -43,46 +47,55 @@ var ClobAuthTypes = apitypes.Types{
 	},
 }
 
-// APIKey represents L2 credentials.
+// APIKey represents the Layer 2 credentials used for HMAC-signed requests.
+// These are typically created or derived using a Layer 1 (EIP-712) signature.
 type APIKey struct {
 	Key        string
 	Secret     string
 	Passphrase string
 }
 
-// Signer is a placeholder for EIP-712 capable signing.
+// Signer defines the interface for an EIP-712 capable signing entity.
+// It can be implemented by a local private key, a hardware wallet, or a KMS.
 type Signer interface {
+	// Address returns the Ethereum address of the signer.
 	Address() common.Address
+	// ChainID returns the network ID this signer is configured for.
 	ChainID() *big.Int
+	// SignTypedData signs data according to the EIP-712 specification.
 	SignTypedData(domain *apitypes.TypedDataDomain, types apitypes.Types, message apitypes.TypedDataMessage, primaryType string) ([]byte, error)
 }
 
-// SignatureType indicates how a signature should be verified by CLOB.
+// SignatureType indicates the wallet type used for signature verification on the CLOB.
 type SignatureType int
 
 const (
+	// SignatureEOA indicates a standard Externally Owned Account (EOA).
 	SignatureEOA SignatureType = iota
+	// SignatureMagic indicates a signature from a Magic.link wallet.
 	SignatureMagic
-	SignatureProxy      SignatureType = 1
+	// SignatureProxy indicates a signature from a Polymarket Proxy wallet.
+	SignatureProxy SignatureType = 1
+	// SignatureGnosisSafe indicates a signature from a Gnosis Safe multisig.
 	SignatureGnosisSafe SignatureType = 2
 )
 
-// Supported chain IDs.
+// Supported chain IDs for Polymarket operations.
 const (
 	PolygonChainID int64 = 137
 	AmoyChainID    int64 = 80002
 )
 
-// Constants for Proxy Wallet Derivation (Polygon Mainnet)
+// Constants for Proxy Wallet Derivation.
 const (
-	// ProxyFactoryAddress is the factory contract for Polymarket Proxy wallets (Magic/email)
+	// ProxyFactoryAddress is the factory contract for Polymarket Proxy wallets (Magic/email).
 	ProxyFactoryAddress = "0xaB45c5A4B0c941a2F231C04C3f49182e1A254052"
-	// SafeFactoryAddress is the factory contract for Gnosis Safe wallets
+	// SafeFactoryAddress is the factory contract for Gnosis Safe wallets.
 	SafeFactoryAddress = "0xaacFeEa03eb1561C4e67d661e40682Bd20E3541b"
 
-	// ProxyInitCodeHash is the init code hash for Polymarket Proxy wallets
+	// ProxyInitCodeHash is the init code hash for Polymarket Proxy wallets.
 	ProxyInitCodeHash = "0xd21df8dc65880a8606f09fe0ce3df9b8869287ab0b058be05aa9e8af6330a00b"
-	// SafeInitCodeHash is the init code hash for Gnosis Safe wallets
+	// SafeInitCodeHash is the init code hash for Gnosis Safe wallets.
 	SafeInitCodeHash = "0x2bce2127ff07fb632d16c8347c4ebf501f4841168bed00d9e6ef715ddb6fcecf"
 )
 
@@ -110,6 +123,7 @@ var (
 	ErrSafeWalletUnsupported  = errors.New("safe wallet derivation not supported on this chain")
 )
 
+// Authentication header keys used by Polymarket API.
 const (
 	HeaderPolyAddress           = "POLY_ADDRESS"
 	HeaderPolySignature         = "POLY_SIGNATURE"
@@ -123,14 +137,15 @@ const (
 	HeaderPolyBuilderTimestamp  = "POLY_BUILDER_TIMESTAMP"
 )
 
-// PrivateKeySigner implements Signer using a raw private key (EOA).
+// PrivateKeySigner implements the Signer interface using a local ECDSA private key.
 type PrivateKeySigner struct {
 	key     *ecdsa.PrivateKey
 	address common.Address
 	chainID *big.Int
 }
 
-// NewPrivateKeySigner creates a new signer from a hex private key.
+// NewPrivateKeySigner creates a new signer from a hex-encoded private key.
+// The hexKey may optionally include a "0x" prefix.
 func NewPrivateKeySigner(hexKey string, chainID int64) (*PrivateKeySigner, error) {
 	if len(hexKey) > 2 && hexKey[:2] == "0x" {
 		hexKey = hexKey[2:]
@@ -148,15 +163,18 @@ func NewPrivateKeySigner(hexKey string, chainID int64) (*PrivateKeySigner, error
 	}, nil
 }
 
+// Address returns the public address of the private key.
 func (s *PrivateKeySigner) Address() common.Address {
 	return s.address
 }
 
+// ChainID returns the network ID this signer is configured for.
 func (s *PrivateKeySigner) ChainID() *big.Int {
 	return s.chainID
 }
 
-// BuildL1Headers creates the L1 auth headers used to create/derive API keys.
+// BuildL1Headers creates the L1 authentication headers required for API key management.
+// It generates an EIP-712 signature over a standard authentication message.
 func BuildL1Headers(signer Signer, timestamp int64, nonce int64) (http.Header, error) {
 	if signer == nil {
 		return nil, ErrMissingSigner
@@ -191,8 +209,8 @@ func BuildL1Headers(signer Signer, timestamp int64, nonce int64) (http.Header, e
 	return headers, nil
 }
 
-// SignHMAC calculates the HMAC-SHA256 signature for L2 authentication.
-// message = timestamp + method + path + body (if present)
+// SignHMAC calculates the HMAC-SHA256 signature used for Layer 2 authentication.
+// The message is typically constructed as timestamp + method + path + body.
 func SignHMAC(secret string, message string) (string, error) {
 	decodedSecret, err := decodeSecret(secret)
 	if err != nil {
@@ -225,7 +243,7 @@ func decodeSecret(secret string) ([]byte, error) {
 	return nil, fmt.Errorf("invalid base64 secret: %w", err)
 }
 
-// BuildL2Headers returns L2 authentication headers for a request.
+// BuildL2Headers returns the headers required for an HMAC-authenticated L2 request.
 func BuildL2Headers(signer Signer, apiKey *APIKey, method, path string, body *string, timestamp int64) (http.Header, error) {
 	if signer == nil {
 		return nil, ErrMissingSigner
@@ -256,32 +274,35 @@ func BuildL2Headers(signer Signer, apiKey *APIKey, method, path string, body *st
 	return headers, nil
 }
 
-// BuilderCredentials represents Builder API key credentials.
+// BuilderCredentials represents credentials for a Builder account.
 type BuilderCredentials struct {
 	Key        string
 	Secret     string
 	Passphrase string
 }
 
-// BuilderHTTPDoer allows custom HTTP clients for builder remote signing.
+// BuilderHTTPDoer defines an interface for executing HTTP requests for remote signing.
 type BuilderHTTPDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// BuilderRemoteConfig configures remote builder header signing.
+// BuilderRemoteConfig configures a remote signing service for builder attribution.
 type BuilderRemoteConfig struct {
-	Host       string
-	Token      string
+	// Host is the endpoint of the remote signing service.
+	Host string
+	// Token is an optional bearer token for authenticating with the signer.
+	Token string
+	// HTTPClient allows providing a custom client for signing requests.
 	HTTPClient BuilderHTTPDoer
 }
 
-// BuilderConfig holds local or remote builder signing configuration.
+// BuilderConfig holds configuration for either local or remote builder attribution.
 type BuilderConfig struct {
 	Local  *BuilderCredentials
 	Remote *BuilderRemoteConfig
 }
 
-// IsValid checks if the builder config has usable credentials.
+// IsValid returns true if the configuration has sufficient credentials.
 func (c *BuilderConfig) IsValid() bool {
 	if c == nil {
 		return false
@@ -295,7 +316,7 @@ func (c *BuilderConfig) IsValid() bool {
 	return false
 }
 
-// Headers builds builder headers for the given request.
+// Headers returns the attribution headers for a given request.
 func (c *BuilderConfig) Headers(ctx context.Context, method, path string, body *string, timestamp int64) (http.Header, error) {
 	if c == nil {
 		return nil, ErrMissingBuilderConfig
@@ -412,28 +433,26 @@ func buildBuilderHeadersRemote(ctx context.Context, remote *BuilderRemoteConfig,
 }
 
 // DeriveProxyWallet calculates the deterministic Proxy Wallet address for an EOA.
-// Corresponds to Rust `derive_proxy_wallet`.
+// Corresponds to the `derive_proxy_wallet` logic in official clients.
+// Defaults to Polygon Mainnet.
 func DeriveProxyWallet(eoa common.Address) (common.Address, error) {
 	return DeriveProxyWalletForChain(eoa, PolygonChainID)
 }
 
-// DeriveProxyWalletForChain calculates the deterministic Proxy Wallet address for an EOA and chain.
+// DeriveProxyWalletForChain calculates the deterministic Proxy Wallet address for an EOA on a specific chain.
 func DeriveProxyWalletForChain(eoa common.Address, chainID int64) (common.Address, error) {
 	cfg, ok := walletConfigs[chainID]
 	if !ok || cfg.ProxyFactory == nil {
 		return common.Address{}, ErrProxyWalletUnsupported
 	}
-	// 1. Calculate salt = keccak256(eoa)
-	// EOA is 20 bytes, no padding for Proxy derivation
+	// salt = keccak256(eoa)
 	salt := crypto.Keccak256(eoa.Bytes())
 
-	// 2. Decode Init Code Hash
 	initCodeHash, err := hexutil.Decode(ProxyInitCodeHash)
 	if err != nil {
 		return common.Address{}, fmt.Errorf("invalid proxy init code hash: %w", err)
 	}
 
-	// 3. Compute CREATE2 address
 	// address = keccak256(0xff + factory + salt + initCodeHash)[12:]
 	address := crypto.CreateAddress2(*cfg.ProxyFactory, common.BytesToHash(salt), initCodeHash)
 
@@ -441,29 +460,28 @@ func DeriveProxyWalletForChain(eoa common.Address, chainID int64) (common.Addres
 }
 
 // DeriveSafeWallet calculates the deterministic Gnosis Safe address for an EOA.
-// Corresponds to Rust `derive_safe_wallet`.
+// Corresponds to the `derive_safe_wallet` logic in official clients.
+// Defaults to Polygon Mainnet.
 func DeriveSafeWallet(eoa common.Address) (common.Address, error) {
 	return DeriveSafeWalletForChain(eoa, PolygonChainID)
 }
 
-// DeriveSafeWalletForChain calculates the deterministic Gnosis Safe address for an EOA and chain.
+// DeriveSafeWalletForChain calculates the deterministic Gnosis Safe address for an EOA on a specific chain.
 func DeriveSafeWalletForChain(eoa common.Address, chainID int64) (common.Address, error) {
 	cfg, ok := walletConfigs[chainID]
 	if !ok {
 		return common.Address{}, ErrSafeWalletUnsupported
 	}
-	// 1. Calculate salt = keccak256(padded_eoa)
-	// Address must be padded to 32 bytes (left-padded)
+	// salt = keccak256(left_pad_32(eoa))
 	paddedEOA := common.LeftPadBytes(eoa.Bytes(), 32)
 	salt := crypto.Keccak256(paddedEOA)
 
-	// 2. Decode Init Code Hash
 	initCodeHash, err := hexutil.Decode(SafeInitCodeHash)
 	if err != nil {
 		return common.Address{}, fmt.Errorf("invalid safe init code hash: %w", err)
 	}
 
-	// 3. Compute CREATE2 address
+	// address = keccak256(0xff + factory + salt + initCodeHash)[12:]
 	address := crypto.CreateAddress2(cfg.SafeFactory, common.BytesToHash(salt), initCodeHash)
 
 	return address, nil
@@ -473,7 +491,8 @@ func ptrAddress(addr common.Address) *common.Address {
 	return &addr
 }
 
-// SignTypedData signs EIP-712 typed data.
+// SignTypedData signs EIP-712 typed data. It ensures the V value is correctly adjusted
+// for compatibility with Ethereum's expected 27/28 values.
 func (s *PrivateKeySigner) SignTypedData(domain *apitypes.TypedDataDomain, types apitypes.Types, message apitypes.TypedDataMessage, primaryType string) ([]byte, error) {
 	typedData := apitypes.TypedData{
 		Types:       types,
@@ -482,8 +501,6 @@ func (s *PrivateKeySigner) SignTypedData(domain *apitypes.TypedDataDomain, types
 		Message:     message,
 	}
 
-	// Hash the typed data
-	// Note: apitypes.TypedDataAndHash is available in recent geth versions
 	sighash, _, err := apitypes.TypedDataAndHash(typedData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash typed data: %w", err)
@@ -494,8 +511,6 @@ func (s *PrivateKeySigner) SignTypedData(domain *apitypes.TypedDataDomain, types
 		return nil, fmt.Errorf("failed to sign hash: %w", err)
 	}
 
-	// Adjust V value for EIP-712 (legacy Geth behavior might require adding 27, but crypto.Sign returns 0/1)
-	// Polymarket likely expects 27/28.
 	if signature[64] < 27 {
 		signature[64] += 27
 	}
