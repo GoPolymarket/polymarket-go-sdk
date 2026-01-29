@@ -1,44 +1,50 @@
-# Polymarket Enterprise Go SDK
+# Polymarket Go SDK
 
 [![Go CI](https://github.com/GoPolymarket/polymarket-go-sdk/actions/workflows/go.yml/badge.svg)](https://github.com/GoPolymarket/polymarket-go-sdk/actions)
 [![Go Reference](https://pkg.go.dev/badge/github.com/GoPolymarket/polymarket-go-sdk.svg)](https://pkg.go.dev/github.com/GoPolymarket/polymarket-go-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Unified, production-grade Go SDK for Polymarket covering CLOB REST, WebSocket, RTDS, Gamma API, and CTF on-chain operations.
+An unofficial, production-ready, and feature-complete Go SDK for the Polymarket CLOB (Central Limit Order Book). Designed for high-frequency trading, market making, and data analysis.
 
-This SDK is architecturally aligned with the official [rs-clob-client](https://github.com/Polymarket/rs-clob-client), providing Go developers with a modular and enterprise-ready trading experience.
+> **Note**: This is a community-maintained project and is not officially affiliated with Polymarket. We aim to provide a high-quality, spec-compliant implementation that can be relied upon by professionals.
 
 ## ✨ Key Features
 
-- **Modular Architecture**: Decoupled `RFQ`, `WS` (WebSocket), and `Heartbeat` modules.
-- **Enterprise Security**: Built-in support for **AWS KMS** (Key Management Service) signing.
-- **Unified Client**: Single entry point with shared transport, auth, and config layers.
-- **Institutional Reliability**: Automated connection management and robust error handling.
-- **Comprehensive Coverage**: Support for all Polymarket APIs (CLOB, Gamma, Data, RTDS, CTF).
-
-## 📈 Polymarket趋势与SDK定位
-
-- **链上预测市场走向机构化**：合规团队与机构交易需要标准化 SDK，统一签名、风控与连接管理。
-- **实时数据与事件驱动**：CLOB 与 WebSocket 订阅成为策略核心，SDK 提供低延迟的订阅与心跳管理能力。
-- **交易基础设施走向安全合规**：企业级密钥管理、审计与安全扫描成为默认配置，本 SDK 以 KMS 与安全审计文档为核心支撑。
+- **🛡️ Type-Safe & Robust**: Fully typed API responses and requests using standard Go patterns.
+- **🚀 High Performance**: Optimized for low-latency trading with efficient HTTP and WebSocket handling.
+- **🔌 WebSocket Recovery**: Built-in "dead connection" detection and automatic reconnection logic (heartbeat monitoring).
+- **🔐 Secure Authentication**:
+    - Supports L1 (EIP-712) and L2 (HMAC) signing.
+    - **Proxy Wallet & Gnosis Safe**: Deterministic address derivation for smart contract wallets.
+    - **AWS KMS**: Plug-and-play support for enterprise-grade key management.
+- **🧩 Modular Architecture**: Clean separation of concerns (CLOB, Account, Market Data, WebSocket).
+- **🏗️ Builder Attribution**: Easy configuration for builder rewards attribution.
 
 ## 🏗 Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a deep dive into the modular design and technical roadmap.
+The SDK is organized into modular packages to ensure maintainability and extensibility:
 
-```text
-pkg/
-├── auth/              # Auth & Signing (EOA, AWS KMS)
-│   ├── kms/           # AWS KMS Integration (EIP-712)
-│   └── ...
-├── clob/              # CLOB REST Core
+```mermaid
+graph TD
+    Client[Client Interface] --> Transport[Transport Layer]
+    Client --> CLOB[CLOB Module]
+    Client --> Auth[Auth Module]
+    Client --> WS[WebSocket Module]
+    
+    CLOB --> Orders[Order Management]
+    CLOB --> Markets[Market Data]
+    CLOB --> Account[Account & Rewards]
+    
+    Auth --> EOA[Private Key Signer]
+    Auth --> KMS[AWS KMS Signer]
+    
+    WS --> Stream[Event Streams]
 ```
 
-## 🔐 Security & Compliance
-
-See [docs/SECURITY.md](docs/SECURITY.md) for details on AWS KMS integration and the security model of the remote builder signer.
-
-A full security audit checklist and CI guidance are captured in [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md).
+- **`pkg/clob`**: The core client for REST API interactions (Orders, Markets, Account).
+- **`pkg/clob/ws`**: Robust WebSocket client with auto-reconnect and typed event channels.
+- **`pkg/auth`**: Cryptographic primitives for EIP-712 signing and HMAC generation.
+- **`pkg/transport`**: HTTP transport layer handling signing injection, retries, and error parsing.
 
 ## 🚀 Installation
 
@@ -48,83 +54,136 @@ go get github.com/GoPolymarket/polymarket-go-sdk
 
 ## 🛠 Quick Start
 
-### Initialize Client
+### 1. Initialize Client & Authentication
+
 ```go
-import polymarket "github.com/GoPolymarket/polymarket-go-sdk"
+package main
 
-client := polymarket.NewClient(polymarket.WithUseServerTime(true))
-authClient := client.CLOB().WithAuth(signer, apiKey)
-```
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
 
-### Request for Quote (RFQ)
-```go
-rfqClient := authClient.RFQ()
-resp, err := rfqClient.CreateRFQRequest(ctx, &rfq.RFQRequest{
-    AssetIn:  "USDC_ADDRESS",
-    AssetOut: "TOKEN_ADDRESS",
-    AmountIn: "100",
-})
-```
+	"github.com/GoPolymarket/polymarket-go-sdk"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+)
 
-### Real-time Orderbook
-```go
-wsClient := authClient.WS()
-events, _ := wsClient.SubscribeOrderbook(ctx, []string{"TOKEN_ID"})
+func main() {
+	// 1. Initialize Signer (Private Key or KMS)
+	pk := os.Getenv("POLYMARKET_PK")
+	signer, err := auth.NewPrivateKeySigner(pk, 137) // 137 = Polygon Mainnet
+	if err != nil {
+		log.Fatal(err)
+	}
 
-for event := range events {
-    fmt.Printf("Price: %s\n", event.Bids[0].Price)
+	// 2. Initialize Credentials
+	creds := &auth.APIKey{
+		Key:        os.Getenv("POLY_API_KEY"),
+		Secret:     os.Getenv("POLY_API_SECRET"),
+		Passphrase: os.Getenv("POLY_API_PASSPHRASE"),
+	}
+
+	// 3. Create Client
+	client := polymarket.NewClient(
+		polymarket.WithAuth(signer, creds),
+	)
+
+	// 4. Check System Status
+	status, _ := client.CLOB().Health(context.Background())
+	fmt.Println("System Status:", status)
 }
 ```
 
-### AWS KMS Integration
-```go
-import "github.com/GoPolymarket/polymarket-go-sdk/pkg/auth/kms"
+### 2. Place an Order (Complex Signing Made Easy)
 
-kmsSigner, _ := kms.NewAWSSigner(ctx, kmsClient, "key-id", 137)
-authClient := client.CLOB().WithAuth(kmsSigner, apiKey)
+The SDK handles the complex EIP-712 hashing and signing automatically.
+
+```go
+ctx := context.Background()
+
+// Create an order builder
+resp, err := client.CLOB().CreateOrder(ctx, 
+    clobtypes.NewOrderBuilder(client.CLOB(), signer).
+        TokenID("TOKEN_ID_HERE").
+        Side("BUY").
+        Price(0.50).
+        Size(100.0).
+        OrderType(clobtypes.OrderTypeGTC).
+        Build(),
+)
+
+if err != nil {
+    log.Fatal("Order failed:", err)
+}
+fmt.Printf("Order Placed: %s\n", resp.ID)
 ```
 
-## ✅ 使用场景
+### 3. Stream Market Data (WebSocket)
 
-- **量化做市与套利**：统一的订单与行情接口，方便搭建跨市场策略。
-- **机构风控交易**：KMS 与审计流程确保密钥与访问控制合规。
-- **实时风控/预警**：WebSocket 与 RTDS 组合实现实时监控与风控信号。
-- **研究与数据分析**：统一 API 结构便于数据拉取与事件回测。
+```go
+wsClient := client.CLOB().WS()
+defers wsClient.Close()
 
-## 🗺 技术路线与Roadmap
+// Subscribe to price updates
+sub, err := wsClient.SubscribePrices(ctx, []string{"TOKEN_ID_HERE"})
+if err != nil {
+    log.Fatal(err)
+}
 
-- [x] Full CLOB REST Support
-- [x] Modular RFQ & WebSocket subsystems
-- [x] **AWS KMS Integration**
-- [x] Security audit documentation + CI vulnerability scan
-- [ ] Google Cloud KMS & Azure Key Vault Support
-- [ ] Local Orderbook Snapshot Management
-- [ ] High-performance CLI Tool (`polygo`)
+for event := range sub {
+    fmt.Printf("New Price for %s: %s\n", event.AssetID, event.Price)
+}
+```
 
-## 📖 Examples & Environment Variables
+### 4. Fetch All Markets (Auto-Pagination)
 
-The SDK includes comprehensive examples in the `examples/` directory.
+Forget about manually handling `next_cursor`.
 
-### Environment Setup for Examples
-- `POLYMARKET_PK`: Hex private key for EOA signing.
-- `POLYMARKET_API_KEY`: CLOB API Key.
-- `POLYMARKET_API_SECRET`: CLOB API Secret.
-- `POLYMARKET_API_PASSPHRASE`: CLOB API Passphrase.
-- `CLOB_WS_DEBUG`: Set to 1 to enable raw WS logging.
+```go
+// Automatically iterates through all pages
+allMarkets, err := client.CLOB().MarketsAll(ctx, &clobtypes.MarketsRequest{
+    Active: boolPtr(true),
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Fetched %d active markets\n", len(allMarkets))
+```
 
-*Refer to the [examples](./examples) folder for detailed usage of RFQ, WS, and CTF clients.*
+## 🗺 Roadmap
 
-## 🤝 Contributing & Builder Attribution
+We are committed to maintaining this SDK as the best-in-class solution for Polymarket.
 
-This project is aiming to become the standard Go implementation for the Polymarket ecosystem.
+- [x] **Core CLOB REST API**: Complete coverage of Order, Market, and Account endpoints.
+- [x] **WebSocket Client**: Robust, auto-reconnecting stream client.
+- [x] **Authentication**: Support for EOA, Proxy, Safe, and AWS KMS.
+- [x] **Pagination**: Helper methods for automatic resource iteration.
+- [x] **CI/CD**: Linting, Testing, and Coverage enforcement.
+- [ ] **Gamma API**: Full integration with the Gamma (Market Metadata) API.
+- [ ] **CTF Exchange**: Direct interaction with the CTF Exchange contract.
+- [ ] **CLI Tool**: A standalone CLI for managing orders and keys.
 
-**Note:** By default, this SDK attributes trading volume to the maintainer via a secure, remote-signing Builder ID. This helps support the ongoing maintenance of the project.
-- **Institutions/Builders**: If you have your own Builder ID, you can easily override this by using `WithBuilderAttribution(...)`.
-- **Community**: If you don't have a Builder ID, no action is needed—your usage automatically supports the project!
+## 🤝 Contributing
+
+Contributions are welcome! Please check out the `examples/` directory for more usage patterns.
+
+1.  Fork the repository.
+2.  Create your feature branch (`git checkout -b feature/amazing-feature`).
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+4.  Push to the branch (`git push origin feature/amazing-feature`).
+5.  Open a Pull Request.
+
+**Requirements**:
+*   Pass `go test ./...`
+*   Pass `golangci-lint run ./...`
+*   Maintain >10% test coverage (strictly enforced by CI).
 
 ## 📜 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-*Disclaimer: This is an unofficial community-maintained SDK. Use it at your own risk.*
+
+*This project is an independent effort to provide a high-quality Go ecosystem for Polymarket. If you find it useful, please star the repo!*
