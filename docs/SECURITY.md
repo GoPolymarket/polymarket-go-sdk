@@ -1,5 +1,12 @@
 # Security & Compliance
 
+## Security Posture Overview
+
+- **Key management isolation**: Signing keys never leave KMS or your HSM boundary.
+- **Least-privilege access**: SDK usage is scoped via API keys and IAM policies.
+- **Transport hardening**: All network access uses TLS and centralized transport configuration.
+- **Auditability**: Designed for CloudTrail and centralized logging integration.
+
 ## AWS KMS Integration
 
 This SDK provides native support for **AWS KMS (Key Management Service)**, allowing institutions to sign EIP-712 orders without exporting private keys.
@@ -45,3 +52,10 @@ client := polymarket.NewClient(
     polymarket.WithBuilderAttribution("YOUR_KEY", "YOUR_SECRET", "YOUR_PASSPHRASE"),
 )
 ```
+
+## Security Operations Checklist
+
+- Rotate API keys and KMS policies regularly.
+- Enable CloudTrail alerts for unusual signing activity.
+- Use environment-scoped API keys per workload.
+- Review CI security scan output (see [docs/SECURITY_AUDIT.md](SECURITY_AUDIT.md)).
