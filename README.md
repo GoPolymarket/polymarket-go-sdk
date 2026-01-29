@@ -210,6 +210,7 @@ We are committed to maintaining this SDK as the best-in-class solution for Polym
 - [x] **Pagination**: Helper methods for automatic resource iteration (`MarketsAll`, `OrdersAll`).
 - [x] **Gamma API**: Read-only metadata and discovery services.
 - [x] **CI/CD**: Linting, Testing, and strictly enforced Coverage.
+- [ ] **Institutional Performance Benchmarking**: High-throughput stress testing and tick-to-trade latency analysis.
 - [ ] **CTF Exchange**: Direct interaction with the CTF Exchange contract for on-chain actions.
 - [ ] **CLI Tool**: A standalone CLI for managing orders and keys.
 
