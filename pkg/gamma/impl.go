@@ -227,6 +227,39 @@ func (c *clientImpl) Events(ctx context.Context, req *EventsRequest) ([]Event, e
 	return resp, err
 }
 
+func (c *clientImpl) EventsAll(ctx context.Context, req *EventsRequest) ([]Event, error) {
+	limit := 100
+	if req != nil && req.Limit != nil {
+		limit = *req.Limit
+	}
+	offset := 0
+	if req != nil && req.Offset != nil {
+		offset = *req.Offset
+	}
+
+	var results []Event
+	for {
+		nextReq := EventsRequest{}
+		if req != nil {
+			nextReq = *req
+		}
+		nextReq.Limit = &limit
+		nextReq.Offset = &offset
+
+		resp, err := c.Events(ctx, &nextReq)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, resp...)
+
+		if len(resp) < limit {
+			break
+		}
+		offset += limit
+	}
+	return results, nil
+}
+
 func (c *clientImpl) EventByID(ctx context.Context, req *EventByIDRequest) (*Event, error) {
 	if req == nil || req.ID == "" {
 		return nil, fmt.Errorf("id is required")
@@ -305,6 +338,39 @@ func (c *clientImpl) Markets(ctx context.Context, req *MarketsRequest) ([]Market
 	var resp []Market
 	err := c.httpClient.Get(ctx, "/markets", q, &resp)
 	return resp, err
+}
+
+func (c *clientImpl) MarketsAll(ctx context.Context, req *MarketsRequest) ([]Market, error) {
+	limit := 100
+	if req != nil && req.Limit != nil {
+		limit = *req.Limit
+	}
+	offset := 0
+	if req != nil && req.Offset != nil {
+		offset = *req.Offset
+	}
+
+	var results []Market
+	for {
+		nextReq := MarketsRequest{}
+		if req != nil {
+			nextReq = *req
+		}
+		nextReq.Limit = &limit
+		nextReq.Offset = &offset
+
+		resp, err := c.Markets(ctx, &nextReq)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, resp...)
+
+		if len(resp) < limit {
+			break
+		}
+		offset += limit
+	}
+	return results, nil
 }
 
 func (c *clientImpl) MarketByID(ctx context.Context, req *MarketByIDRequest) (*Market, error) {

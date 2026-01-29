@@ -23,9 +23,9 @@ type OrderBuilder struct {
 
 	tokenID    string
 	side       string
-	price      float64
-	size       float64
-	feeRateBps float64
+	price      decimal.Decimal
+	size       decimal.Decimal
+	feeRateBps decimal.Decimal
 	tickSize   string
 	orderType  clobtypes.OrderType
 
@@ -75,20 +75,38 @@ func (b *OrderBuilder) Side(side string) *OrderBuilder {
 	return b
 }
 
-// Price sets the price per share.
+// Price sets the price per share using a float64.
 func (b *OrderBuilder) Price(price float64) *OrderBuilder {
+	b.price = decimal.NewFromFloat(price)
+	return b
+}
+
+// PriceDec sets the price per share using a decimal.Decimal.
+func (b *OrderBuilder) PriceDec(price decimal.Decimal) *OrderBuilder {
 	b.price = price
 	return b
 }
 
-// Size sets the number of shares.
+// Size sets the number of shares using a float64.
 func (b *OrderBuilder) Size(size float64) *OrderBuilder {
+	b.size = decimal.NewFromFloat(size)
+	return b
+}
+
+// SizeDec sets the number of shares using a decimal.Decimal.
+func (b *OrderBuilder) SizeDec(size decimal.Decimal) *OrderBuilder {
 	b.size = size
 	return b
 }
 
-// FeeRateBps sets the fee rate in basis points (default 0).
+// FeeRateBps sets the fee rate in basis points using a float64 (default 0).
 func (b *OrderBuilder) FeeRateBps(bps float64) *OrderBuilder {
+	b.feeRateBps = decimal.NewFromFloat(bps)
+	return b
+}
+
+// FeeRateBpsDec sets the fee rate in basis points using a decimal.Decimal.
+func (b *OrderBuilder) FeeRateBpsDec(bps decimal.Decimal) *OrderBuilder {
 	b.feeRateBps = bps
 	return b
 }
@@ -258,11 +276,11 @@ func (b *OrderBuilder) BuildMarketWithContext(ctx context.Context) (*clobtypes.S
 	tickScale := decimalPlaces(tickSize)
 
 	var price decimal.Decimal
-	if b.price < 0 {
+	if b.price.Sign() < 0 {
 		return nil, fmt.Errorf("price must be positive")
 	}
-	if b.price > 0 {
-		price = decimal.NewFromFloat(b.price)
+	if b.price.Sign() > 0 {
+		price = b.price
 		if decimalPlaces(price) > tickScale {
 			return nil, fmt.Errorf("price has too many decimal places for tick size %s", tickSize.String())
 		}
@@ -389,10 +407,10 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 	if side != "BUY" && side != "SELL" {
 		return nil, fmt.Errorf("side must be BUY or SELL")
 	}
-	if b.price <= 0 {
+	if b.price.Sign() <= 0 {
 		return nil, fmt.Errorf("price must be positive")
 	}
-	if b.size <= 0 {
+	if b.size.Sign() <= 0 {
 		return nil, fmt.Errorf("size must be positive")
 	}
 
@@ -407,7 +425,7 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 	}
 	tickScale := decimalPlaces(tickSize)
 
-	price := decimal.NewFromFloat(b.price)
+	price := b.price
 	if decimalPlaces(price) > tickScale {
 		return nil, fmt.Errorf("price has too many decimal places for tick size %s", tickSize.String())
 	}
@@ -416,7 +434,7 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 		return nil, fmt.Errorf("price %s is out of bounds for tick size %s", price.String(), tickSize.String())
 	}
 
-	size := decimal.NewFromFloat(b.size)
+	size := b.size
 	if decimalPlaces(size) > lotSizeScale {
 		return nil, fmt.Errorf("size has too many decimal places (max %d)", lotSizeScale)
 	}
@@ -699,11 +717,10 @@ func toFixedDecimal(d decimal.Decimal) decimal.Decimal {
 	return trimmed.Shift(usdcDecimals).Truncate(0)
 }
 
-func parseFeeRateBps(value float64) (int64, error) {
-	if value <= 0 {
+func parseFeeRateBps(dec decimal.Decimal) (int64, error) {
+	if dec.Sign() <= 0 {
 		return 0, nil
 	}
-	dec := decimal.NewFromFloat(value)
 	intPart := dec.Truncate(0)
 	if !intPart.Equal(dec) {
 		return 0, fmt.Errorf("fee rate must be an integer bps value")

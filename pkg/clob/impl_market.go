@@ -28,7 +28,7 @@ func (c *clientImpl) Markets(ctx context.Context, req *clobtypes.MarketsRequest)
 
 	var resp clobtypes.MarketsResponse
 	err := c.httpClient.Get(ctx, "/markets", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) MarketsAll(ctx context.Context, req *clobtypes.MarketsRequest) ([]clobtypes.Market, error) {
@@ -63,7 +63,7 @@ func (c *clientImpl) MarketsAll(ctx context.Context, req *clobtypes.MarketsReque
 func (c *clientImpl) Market(ctx context.Context, id string) (clobtypes.MarketResponse, error) {
 	var resp clobtypes.MarketResponse
 	err := c.httpClient.Get(ctx, fmt.Sprintf("/markets/%s", id), nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) SimplifiedMarkets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error) {
@@ -84,19 +84,19 @@ func (c *clientImpl) SimplifiedMarkets(ctx context.Context, req *clobtypes.Marke
 	}
 	var resp clobtypes.MarketsResponse
 	err := c.httpClient.Get(ctx, "/simplified-markets", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) SamplingMarkets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error) {
 	var resp clobtypes.MarketsResponse
 	err := c.httpClient.Get(ctx, "/sampling-markets", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) SamplingSimplifiedMarkets(ctx context.Context, req *clobtypes.MarketsRequest) (clobtypes.MarketsResponse, error) {
 	var resp clobtypes.MarketsResponse
 	err := c.httpClient.Get(ctx, "/sampling-simplified-markets", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) OrderBook(ctx context.Context, req *clobtypes.BookRequest) (clobtypes.OrderBookResponse, error) {
@@ -109,7 +109,7 @@ func (c *clientImpl) OrderBook(ctx context.Context, req *clobtypes.BookRequest) 
 	}
 	var resp clobtypes.OrderBookResponse
 	err := c.httpClient.Get(ctx, "/book", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) OrderBooks(ctx context.Context, req *clobtypes.BooksRequest) (clobtypes.OrderBooksResponse, error) {
@@ -122,7 +122,7 @@ func (c *clientImpl) OrderBooks(ctx context.Context, req *clobtypes.BooksRequest
 		}
 	}
 	err := c.httpClient.Post(ctx, "/books", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Midpoint(ctx context.Context, req *clobtypes.MidpointRequest) (clobtypes.MidpointResponse, error) {
@@ -132,7 +132,7 @@ func (c *clientImpl) Midpoint(ctx context.Context, req *clobtypes.MidpointReques
 	}
 	var resp clobtypes.MidpointResponse
 	err := c.httpClient.Get(ctx, "/midpoint", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Midpoints(ctx context.Context, req *clobtypes.MidpointsRequest) (clobtypes.MidpointsResponse, error) {
@@ -145,7 +145,7 @@ func (c *clientImpl) Midpoints(ctx context.Context, req *clobtypes.MidpointsRequ
 		}
 	}
 	err := c.httpClient.Post(ctx, "/midpoints", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Price(ctx context.Context, req *clobtypes.PriceRequest) (clobtypes.PriceResponse, error) {
@@ -158,7 +158,7 @@ func (c *clientImpl) Price(ctx context.Context, req *clobtypes.PriceRequest) (cl
 	}
 	var resp clobtypes.PriceResponse
 	err := c.httpClient.Get(ctx, "/price", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Prices(ctx context.Context, req *clobtypes.PricesRequest) (clobtypes.PricesResponse, error) {
@@ -175,13 +175,13 @@ func (c *clientImpl) Prices(ctx context.Context, req *clobtypes.PricesRequest) (
 		}
 	}
 	err := c.httpClient.Post(ctx, "/prices", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) AllPrices(ctx context.Context) (clobtypes.PricesResponse, error) {
 	var resp clobtypes.PricesResponse
 	err := c.httpClient.Get(ctx, "/prices", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Spread(ctx context.Context, req *clobtypes.SpreadRequest) (clobtypes.SpreadResponse, error) {
@@ -191,7 +191,7 @@ func (c *clientImpl) Spread(ctx context.Context, req *clobtypes.SpreadRequest) (
 	}
 	var resp clobtypes.SpreadResponse
 	err := c.httpClient.Get(ctx, "/spread", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Spreads(ctx context.Context, req *clobtypes.SpreadsRequest) (clobtypes.SpreadsResponse, error) {
@@ -204,7 +204,7 @@ func (c *clientImpl) Spreads(ctx context.Context, req *clobtypes.SpreadsRequest)
 		}
 	}
 	err := c.httpClient.Post(ctx, "/spreads", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) LastTradePrice(ctx context.Context, req *clobtypes.LastTradePriceRequest) (clobtypes.LastTradePriceResponse, error) {
@@ -214,7 +214,7 @@ func (c *clientImpl) LastTradePrice(ctx context.Context, req *clobtypes.LastTrad
 	}
 	var resp clobtypes.LastTradePriceResponse
 	err := c.httpClient.Get(ctx, "/last-trade-price", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) LastTradesPrices(ctx context.Context, req *clobtypes.LastTradesPricesRequest) (clobtypes.LastTradesPricesResponse, error) {
@@ -227,7 +227,7 @@ func (c *clientImpl) LastTradesPrices(ctx context.Context, req *clobtypes.LastTr
 		}
 	}
 	err := c.httpClient.Post(ctx, "/last-trades-prices", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) TickSize(ctx context.Context, req *clobtypes.TickSizeRequest) (clobtypes.TickSizeResponse, error) {
@@ -256,7 +256,7 @@ func (c *clientImpl) TickSize(ctx context.Context, req *clobtypes.TickSizeReques
 			c.cache.mu.Unlock()
 		}
 	}
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) NegRisk(ctx context.Context, req *clobtypes.NegRiskRequest) (clobtypes.NegRiskResponse, error) {
@@ -279,7 +279,7 @@ func (c *clientImpl) NegRisk(ctx context.Context, req *clobtypes.NegRiskRequest)
 		c.cache.negRisk[req.TokenID] = resp.NegRisk
 		c.cache.mu.Unlock()
 	}
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) FeeRate(ctx context.Context, req *clobtypes.FeeRateRequest) (clobtypes.FeeRateResponse, error) {
@@ -310,7 +310,7 @@ func (c *clientImpl) FeeRate(ctx context.Context, req *clobtypes.FeeRateRequest)
 			c.cache.mu.Unlock()
 		}
 	}
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) PricesHistory(ctx context.Context, req *clobtypes.PricesHistoryRequest) (clobtypes.PricesHistoryResponse, error) {
@@ -329,11 +329,11 @@ func (c *clientImpl) PricesHistory(ctx context.Context, req *clobtypes.PricesHis
 	}
 	var resp clobtypes.PricesHistoryResponse
 	err := c.httpClient.Get(ctx, "/prices-history", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) MarketTradesEvents(ctx context.Context, id string) (clobtypes.MarketTradesEventsResponse, error) {
 	var resp clobtypes.MarketTradesEventsResponse
 	err := c.httpClient.Get(ctx, "/v1/market-trades-events/"+id, nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }

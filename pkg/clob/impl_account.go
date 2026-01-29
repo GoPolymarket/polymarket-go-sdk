@@ -17,7 +17,7 @@ func (c *clientImpl) BalanceAllowance(ctx context.Context, req *clobtypes.Balanc
 	}
 	var resp clobtypes.BalanceAllowanceResponse
 	err := c.httpClient.Get(ctx, "/balance-allowance", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) UpdateBalanceAllowance(ctx context.Context, req *clobtypes.BalanceAllowanceUpdateRequest) (clobtypes.BalanceAllowanceResponse, error) {
@@ -32,7 +32,7 @@ func (c *clientImpl) UpdateBalanceAllowance(ctx context.Context, req *clobtypes.
 	}
 	var resp clobtypes.BalanceAllowanceResponse
 	err := c.httpClient.Get(ctx, "/balance-allowance/update", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Notifications(ctx context.Context, req *clobtypes.NotificationsRequest) (clobtypes.NotificationsResponse, error) {
@@ -42,7 +42,7 @@ func (c *clientImpl) Notifications(ctx context.Context, req *clobtypes.Notificat
 	}
 	var resp clobtypes.NotificationsResponse
 	err := c.httpClient.Get(ctx, "/notifications", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) DropNotifications(ctx context.Context, req *clobtypes.DropNotificationsRequest) (clobtypes.DropNotificationsResponse, error) {
@@ -57,7 +57,7 @@ func (c *clientImpl) DropNotifications(ctx context.Context, req *clobtypes.DropN
 	} else {
 		err = c.httpClient.Delete(ctx, "/notifications", nil, &resp)
 	}
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) UserEarnings(ctx context.Context, req *clobtypes.UserEarningsRequest) (clobtypes.UserEarningsResponse, error) {
@@ -67,7 +67,7 @@ func (c *clientImpl) UserEarnings(ctx context.Context, req *clobtypes.UserEarnin
 	}
 	var resp clobtypes.UserEarningsResponse
 	err := c.httpClient.Get(ctx, "/rewards/user", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) UserTotalEarnings(ctx context.Context, req *clobtypes.UserTotalEarningsRequest) (clobtypes.UserTotalEarningsResponse, error) {
@@ -77,25 +77,25 @@ func (c *clientImpl) UserTotalEarnings(ctx context.Context, req *clobtypes.UserT
 	}
 	var resp clobtypes.UserTotalEarningsResponse
 	err := c.httpClient.Get(ctx, "/rewards/user/total", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) UserRewardPercentages(ctx context.Context, req *clobtypes.UserRewardPercentagesRequest) (clobtypes.UserRewardPercentagesResponse, error) {
 	var resp clobtypes.UserRewardPercentagesResponse
 	err := c.httpClient.Get(ctx, "/rewards/user/percentages", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) RewardsMarketsCurrent(ctx context.Context) (clobtypes.RewardsMarketsResponse, error) {
 	var resp clobtypes.RewardsMarketsResponse
 	err := c.httpClient.Get(ctx, "/rewards/markets/current", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) RewardsMarkets(ctx context.Context, id string) (clobtypes.RewardsMarketResponse, error) {
 	var resp clobtypes.RewardsMarketResponse
 	err := c.httpClient.Get(ctx, fmt.Sprintf("/rewards/markets/%s", id), nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) UserRewardsByMarket(ctx context.Context, req *clobtypes.UserRewardsByMarketRequest) (clobtypes.UserRewardsByMarketResponse, error) {
@@ -105,7 +105,7 @@ func (c *clientImpl) UserRewardsByMarket(ctx context.Context, req *clobtypes.Use
 	}
 	var resp clobtypes.UserRewardsByMarketResponse
 	err := c.httpClient.Get(ctx, "/rewards/user/markets", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CreateAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
@@ -129,13 +129,13 @@ func (c *clientImpl) CreateAPIKey(ctx context.Context) (clobtypes.APIKeyResponse
 	// Note: We use CallWithHeaders to inject L1 headers.
 	// clobtypes.CreateAPIKey uses POST /auth/api-key
 	err = c.httpClient.CallWithHeaders(ctx, "POST", "/auth/api-key", nil, nil, &resp, headers)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) ListAPIKeys(ctx context.Context) (clobtypes.APIKeyListResponse, error) {
 	var resp clobtypes.APIKeyListResponse
 	err := c.httpClient.Get(ctx, "/auth/api-keys", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) DeleteAPIKey(ctx context.Context, id string) (clobtypes.APIKeyResponse, error) {
@@ -146,10 +146,10 @@ func (c *clientImpl) DeleteAPIKey(ctx context.Context, id string) (clobtypes.API
 	}
 	if len(q) > 0 {
 		err := c.httpClient.Call(ctx, "DELETE", "/auth/api-key", q, nil, &resp, nil)
-		return resp, err
+		return resp, mapError(err)
 	}
 	err := c.httpClient.Delete(ctx, "/auth/api-key", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) DeriveAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
@@ -165,32 +165,32 @@ func (c *clientImpl) DeriveAPIKey(ctx context.Context) (clobtypes.APIKeyResponse
 		auth.HeaderPolySignature: headersRaw.Get(auth.HeaderPolySignature),
 	}
 	err = c.httpClient.CallWithHeaders(ctx, "GET", "/auth/derive-api-key", nil, nil, &resp, headers)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) ClosedOnlyStatus(ctx context.Context) (clobtypes.ClosedOnlyResponse, error) {
 	var resp clobtypes.ClosedOnlyResponse
 	err := c.httpClient.Get(ctx, "/auth/ban-status/closed-only", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CreateReadonlyAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
 	var resp clobtypes.APIKeyResponse
 	err := c.httpClient.Post(ctx, "/auth/readonly-api-key", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) ListReadonlyAPIKeys(ctx context.Context) (clobtypes.APIKeyListResponse, error) {
 	var resp clobtypes.APIKeyListResponse
 	err := c.httpClient.Get(ctx, "/auth/readonly-api-keys", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) DeleteReadonlyAPIKey(ctx context.Context, id string) (clobtypes.APIKeyResponse, error) {
 	var resp clobtypes.APIKeyResponse
 	body := map[string]string{"key": id}
 	err := c.httpClient.Delete(ctx, "/auth/readonly-api-key", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) ValidateReadonlyAPIKey(ctx context.Context, req *clobtypes.ValidateReadonlyAPIKeyRequest) (clobtypes.ValidateReadonlyAPIKeyResponse, error) {
@@ -205,23 +205,23 @@ func (c *clientImpl) ValidateReadonlyAPIKey(ctx context.Context, req *clobtypes.
 	}
 	var resp clobtypes.ValidateReadonlyAPIKeyResponse
 	err := c.httpClient.Get(ctx, "/auth/validate-readonly-api-key", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CreateBuilderAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
 	var resp clobtypes.APIKeyResponse
 	err := c.httpClient.Post(ctx, "/auth/builder-api-key", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) ListBuilderAPIKeys(ctx context.Context) (clobtypes.APIKeyListResponse, error) {
 	var resp clobtypes.APIKeyListResponse
 	err := c.httpClient.Get(ctx, "/auth/builder-api-key", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) RevokeBuilderAPIKey(ctx context.Context, id string) (clobtypes.APIKeyResponse, error) {
 	// Endpoint returns empty body; ignore response.
 	err := c.httpClient.Call(ctx, "DELETE", "/auth/builder-api-key", nil, nil, nil, nil)
-	return clobtypes.APIKeyResponse{}, err
+	return clobtypes.APIKeyResponse{}, mapError(err)
 }

@@ -6,10 +6,12 @@ import (
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/cloberrors"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/heartbeat"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/rfq"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/ws"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
 )
 
 // clientImpl implements the Client interface.
@@ -234,4 +236,14 @@ func (c *clientImpl) SetFeeRateBps(tokenID string, feeRateBps int64) {
 	c.cache.mu.Lock()
 	c.cache.feeRates[tokenID] = feeRateBps
 	c.cache.mu.Unlock()
+}
+
+func mapError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if apiErr, ok := err.(*types.Error); ok {
+		return cloberrors.FromTypeErr(apiErr)
+	}
+	return err
 }

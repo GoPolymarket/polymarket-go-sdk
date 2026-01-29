@@ -159,7 +159,7 @@ func (c *clientImpl) PostOrder(ctx context.Context, req *clobtypes.SignedOrder) 
 		return resp, err
 	}
 	err = c.httpClient.Post(ctx, "/order", payload, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) PostOrders(ctx context.Context, req *clobtypes.SignedOrders) (clobtypes.PostOrdersResponse, error) {
@@ -169,37 +169,37 @@ func (c *clientImpl) PostOrders(ctx context.Context, req *clobtypes.SignedOrders
 		return resp, err
 	}
 	err = c.httpClient.Post(ctx, "/orders", payload, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CancelOrder(ctx context.Context, req *clobtypes.CancelOrderRequest) (clobtypes.CancelResponse, error) {
 	var resp clobtypes.CancelResponse
 	err := c.httpClient.Delete(ctx, "/order", req, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CancelOrders(ctx context.Context, req *clobtypes.CancelOrdersRequest) (clobtypes.CancelResponse, error) {
 	var resp clobtypes.CancelResponse
 	err := c.httpClient.Delete(ctx, "/orders", req, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CancelAll(ctx context.Context) (clobtypes.CancelAllResponse, error) {
 	var resp clobtypes.CancelAllResponse
 	err := c.httpClient.Delete(ctx, "/cancel-all", nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) CancelMarketOrders(ctx context.Context, req *clobtypes.CancelMarketOrdersRequest) (clobtypes.CancelMarketOrdersResponse, error) {
 	var resp clobtypes.CancelMarketOrdersResponse
 	err := c.httpClient.Delete(ctx, "/cancel-market-orders", req, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Order(ctx context.Context, id string) (clobtypes.OrderResponse, error) {
 	var resp clobtypes.OrderResponse
 	err := c.httpClient.Get(ctx, fmt.Sprintf("/data/order/%s", id), nil, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Orders(ctx context.Context, req *clobtypes.OrdersRequest) (clobtypes.OrdersResponse, error) {
@@ -227,7 +227,7 @@ func (c *clientImpl) Orders(ctx context.Context, req *clobtypes.OrdersRequest) (
 	}
 	var resp clobtypes.OrdersResponse
 	err := c.httpClient.Get(ctx, "/data/orders", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) Trades(ctx context.Context, req *clobtypes.TradesRequest) (clobtypes.TradesResponse, error) {
@@ -267,7 +267,7 @@ func (c *clientImpl) Trades(ctx context.Context, req *clobtypes.TradesRequest) (
 	}
 	var resp clobtypes.TradesResponse
 	err := c.httpClient.Get(ctx, "/data/trades", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) OrdersAll(ctx context.Context, req *clobtypes.OrdersRequest) ([]clobtypes.OrderResponse, error) {
@@ -385,7 +385,7 @@ func (c *clientImpl) OrderScoring(ctx context.Context, req *clobtypes.OrderScori
 	}
 	var resp clobtypes.OrderScoringResponse
 	err := c.httpClient.Get(ctx, "/order-scoring", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) OrdersScoring(ctx context.Context, req *clobtypes.OrdersScoringRequest) (clobtypes.OrdersScoringResponse, error) {
@@ -395,7 +395,7 @@ func (c *clientImpl) OrdersScoring(ctx context.Context, req *clobtypes.OrdersSco
 		body = req.IDs
 	}
 	err := c.httpClient.Post(ctx, "/orders-scoring", body, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
 
 func (c *clientImpl) BuilderTrades(ctx context.Context, req *clobtypes.BuilderTradesRequest) (clobtypes.BuilderTradesResponse, error) {
@@ -432,6 +432,5 @@ func (c *clientImpl) BuilderTrades(ctx context.Context, req *clobtypes.BuilderTr
 	}
 	var resp clobtypes.BuilderTradesResponse
 	err := c.httpClient.Get(ctx, "/builder/trades", q, &resp)
-	return resp, err
+	return resp, mapError(err)
 }
-

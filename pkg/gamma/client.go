@@ -17,14 +17,19 @@ type Client interface {
 	RelatedTagsBySlug(ctx context.Context, req *RelatedTagsBySlugRequest) ([]RelatedTag, error)
 	TagsRelatedToTagByID(ctx context.Context, req *RelatedTagsByIDRequest) ([]Tag, error)
 	TagsRelatedToTagBySlug(ctx context.Context, req *RelatedTagsBySlugRequest) ([]Tag, error)
+	
 	Events(ctx context.Context, req *EventsRequest) ([]Event, error)
+	EventsAll(ctx context.Context, req *EventsRequest) ([]Event, error)
 	EventByID(ctx context.Context, req *EventByIDRequest) (*Event, error)
 	EventBySlug(ctx context.Context, req *EventBySlugRequest) (*Event, error)
 	EventTags(ctx context.Context, req *EventTagsRequest) ([]Tag, error)
+	
 	Markets(ctx context.Context, req *MarketsRequest) ([]Market, error)
+	MarketsAll(ctx context.Context, req *MarketsRequest) ([]Market, error)
 	MarketByID(ctx context.Context, req *MarketByIDRequest) (*Market, error)
 	MarketBySlug(ctx context.Context, req *MarketBySlugRequest) (*Market, error)
 	MarketTags(ctx context.Context, req *MarketTagsRequest) ([]Tag, error)
+	
 	Series(ctx context.Context, req *SeriesRequest) ([]Series, error)
 	SeriesByID(ctx context.Context, req *SeriesByIDRequest) (*Series, error)
 	Comments(ctx context.Context, req *CommentsRequest) ([]Comment, error)

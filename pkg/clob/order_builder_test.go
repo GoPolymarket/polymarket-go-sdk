@@ -1,8 +1,10 @@
 package clob
 
 import (
+	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/shopspring/decimal"
 
@@ -155,4 +157,77 @@ func TestBuildMarketFAKUsesTopPriceWhenInsufficient(t *testing.T) {
 	if !signable.Order.TakerAmount.Equal(expectedTaker) {
 		t.Fatalf("taker amount mismatch: got %s want %s", signable.Order.TakerAmount.String(), expectedTaker.String())
 	}
+}
+
+func TestBuildLimitOrder(t *testing.T) {
+	stub := newStubClient()
+	stub.tickSize = "0.01"
+	stub.feeRate = 10
+
+	ctx := context.Background()
+	signer := mustSigner(t)
+
+	t.Run("BasicLimit", func(t *testing.T) {
+		order, err := NewOrderBuilder(stub, signer).
+			TokenID("123").
+			Side("BUY").
+			Price(0.5).
+			Size(100).
+			BuildWithContext(ctx)
+		if err != nil {
+			t.Fatalf("Build failed: %v", err)
+		}
+		if order.Side != "BUY" {
+			t.Errorf("wrong side")
+		}
+	})
+
+	t.Run("SignableLimit", func(t *testing.T) {
+		postOnly := true
+		signable, err := NewOrderBuilder(stub, signer).
+			TokenID("123").
+			Side("SELL").
+			Price(0.6).
+			Size(50).
+			OrderType(clobtypes.OrderTypeGTD).
+			ExpirationUnix(time.Now().Unix() + 3600).
+			PostOnly(postOnly).
+			BuildSignableWithContext(ctx)
+		if err != nil {
+			t.Fatalf("BuildSignable failed: %v", err)
+		}
+		if signable.OrderType != clobtypes.OrderTypeGTD {
+			t.Errorf("wrong order type")
+		}
+		if signable.PostOnly == nil || !*signable.PostOnly {
+			t.Errorf("postOnly mismatch")
+		}
+	})
+
+	t.Run("WalletDerivation", func(t *testing.T) {
+		builder := NewOrderBuilder(stub, signer).
+			TokenID("123").
+			Side("BUY").
+			Price(0.5).
+			Size(10).
+			AmountUSDC(5)
+		
+		// Test Proxy
+		signable, err := builder.UseProxy().BuildMarketWithContext(ctx)
+		if err != nil {
+			t.Fatalf("Proxy derivation failed: %v", err)
+		}
+		if signable.Order.SignatureType == nil || *signable.Order.SignatureType != 1 {
+			t.Errorf("proxy type mismatch")
+		}
+
+		// Test Safe
+		signable, err = builder.UseSafe().BuildMarketWithContext(ctx)
+		if err != nil {
+			t.Fatalf("Safe derivation failed: %v", err)
+		}
+		if signable.Order.SignatureType == nil || *signable.Order.SignatureType != 2 {
+			t.Errorf("safe type mismatch")
+		}
+	})
 }
