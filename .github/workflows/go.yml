@@ -6,29 +6,53 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
-  build:
-    name: Build and Test
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ['1.23', '1.24']
-
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
-        cache: true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.5
+          args: --timeout=5m
 
-    - name: Check out code
-      uses: actions/checkout@v3
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Install dependencies
+        run: go mod download
+      - name: Build
+        run: go build -v ./...
+      - name: Test with Race Detector
+        run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Check Coverage
+        run: |
+          go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}' | awk '{if ($1 < 10.0) { print "Coverage is " $1 "%\, which is below the 10% threshold"; exit 1 } else { print "Coverage is " $1 "%" }}'
 
-    - name: Install dependencies
-      run: go mod download
-
-    - name: Build All
-      run: go build -v ./...
-
-    - name: Run Tests
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
