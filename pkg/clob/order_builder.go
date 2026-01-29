@@ -310,7 +310,7 @@ func (b *OrderBuilder) BuildMarketWithContext(ctx context.Context) (*clobtypes.S
 		sigType = int(*b.signatureType)
 	}
 
-	maker := common.Address{}
+	var maker common.Address
 	if b.maker != nil {
 		maker = *b.maker
 	} else {
@@ -447,7 +447,7 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 		sigType = int(*b.signatureType)
 	}
 
-	maker := common.Address{}
+	var maker common.Address
 	if b.maker != nil {
 		maker = *b.maker
 	} else {

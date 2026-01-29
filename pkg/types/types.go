@@ -43,10 +43,6 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("api error: %s (status=%d)", e.Message, e.Status)
 }
 
-func jsonUnmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
-}
-
 // MarshalJSON encodes the U256 as a decimal string.
 func (u U256) MarshalJSON() ([]byte, error) {
 	if u.Int == nil {

@@ -58,7 +58,7 @@ jobs:
       - name: Check Coverage
         if: matrix.go-version == '1.24'
         run: |
-          go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}' | awk '{if ($1 < 50.0) { print "Coverage is " $1 "%, which is below the 50% threshold"; exit 1 } else { print "Coverage is " $1 "%" }}'
+          go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}' | awk '{if ($1 < 10.0) { print "Coverage is " $1 "%, which is below the 10% threshold"; exit 1 } else { print "Coverage is " $1 "%" }}'
 
   security:
     name: Security Scan

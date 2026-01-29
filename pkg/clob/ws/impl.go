@@ -23,6 +23,8 @@ const (
 	ProdBaseURL = "wss://ws-subscriptions-clob.polymarket.com"
 )
 
+var ReadTimeout = 60 * time.Second
+
 type clientImpl struct {
 	baseURL      string
 	marketURL    string
@@ -263,6 +265,11 @@ func (c *clientImpl) connectUser() error {
 }
 
 func (c *clientImpl) readLoop(channel Channel) {
+	// Set initial read deadline
+	if conn := c.getConn(channel); conn != nil {
+		_ = conn.SetReadDeadline(time.Now().Add(ReadTimeout))
+	}
+
 	for {
 		conn := c.getConn(channel)
 		if conn == nil {
@@ -288,6 +295,17 @@ func (c *clientImpl) readLoop(channel Channel) {
 			log.Printf("read error: %v", err)
 			c.setConnState(channel, ConnectionDisconnected, 0)
 			break
+		}
+
+		// Refresh read deadline
+		_ = conn.SetReadDeadline(time.Now().Add(ReadTimeout))
+
+		// Check for PONG
+		if string(message) == "PONG" {
+			if c.debug {
+				log.Printf("Received PONG")
+			}
+			continue
 		}
 
 		// Debug: Print raw message to troubleshoot "no events"
@@ -996,10 +1014,8 @@ func bindContext[T any](ctx context.Context, stream *Stream[T]) {
 		return
 	}
 	go func() {
-		select {
-		case <-done:
-			_ = stream.Close()
-		}
+		<-done
+		_ = stream.Close()
 	}()
 }
 
@@ -1087,14 +1103,6 @@ func (c *clientImpl) resolveAuth(explicit *AuthPayload) *AuthPayload {
 		return auth
 	}
 	return c.getLastAuth()
-}
-
-func (c *clientImpl) setLastAuth(auth *AuthPayload) {
-	if auth == nil {
-		return
-	}
-	copy := *auth
-	c.lastAuth = &copy
 }
 
 func (c *clientImpl) getLastAuth() *AuthPayload {

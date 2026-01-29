@@ -104,3 +104,24 @@ func TestBuilderTradesAllPagination(t *testing.T) {
 		t.Fatalf("expected 2 builder trades, got %d", len(results))
 	}
 }
+
+func TestMarketsAllPagination(t *testing.T) {
+	doer := &staticDoer{
+		responses: map[string]string{
+			buildKey("/markets", url.Values{"limit": {"1"}, "cursor": {clobtypes.InitialCursor}}): `{"data":[{"id":"1"}],"next_cursor":"NEXT"}`,
+			buildKey("/markets", url.Values{"limit": {"1"}, "cursor": {"NEXT"}}):                  `{"data":[{"id":"2"}],"next_cursor":"LTE="}`,
+		},
+	}
+	client := &clientImpl{
+		httpClient: transport.NewClient(doer, "http://example"),
+		cache:      newClientCache(),
+	}
+
+	results, err := client.MarketsAll(context.Background(), &clobtypes.MarketsRequest{Limit: 1})
+	if err != nil {
+		t.Fatalf("MarketsAll failed: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 markets, got %d", len(results))
+	}
+}
