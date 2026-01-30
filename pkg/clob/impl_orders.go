@@ -204,13 +204,8 @@ func (c *clientImpl) CancelOrder(ctx context.Context, req *clobtypes.CancelOrder
 	var resp clobtypes.CancelResponse
 	var body interface{}
 	if req != nil {
-		orderID := req.OrderID
-		if orderID == "" {
-			//lint:ignore SA1019 backward compatibility for legacy field ID
-			orderID = req.ID
-		}
-		if orderID != "" {
-			body = map[string]string{"id": orderID}
+		if req.ID != "" {
+			body = map[string]string{"id": req.ID}
 		}
 	}
 	err := c.httpClient.Delete(ctx, "/order", body, &resp)

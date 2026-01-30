@@ -13,7 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 
-	"github.com/GoPolymarket/polymarket-go-sdk"
+	polymarket "github.com/GoPolymarket/polymarket-go-sdk"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
 	
 "github.com/GoPolymarket/polymarket-go-sdk/pkg/types"

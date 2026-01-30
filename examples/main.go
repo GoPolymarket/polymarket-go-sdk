@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/GoPolymarket/polymarket-go-sdk"
+	polymarket "github.com/GoPolymarket/polymarket-go-sdk"
 	
 )
 
