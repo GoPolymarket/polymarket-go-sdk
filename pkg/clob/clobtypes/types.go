@@ -134,14 +134,10 @@ type (
 		Orders []SignedOrder `json:"orders"`
 	}
 	CancelOrderRequest struct {
-		// Deprecated: prefer OrderID.
-		ID string `json:"id,omitempty"`
 		// OrderID is the canonical field used by the API ("orderId").
 		OrderID string `json:"orderId,omitempty"`
 	}
 	CancelOrdersRequest struct {
-		// Deprecated: prefer OrderIDs.
-		IDs []string `json:"ids,omitempty"`
 		// OrderIDs is the canonical batch payload.
 		OrderIDs []string `json:"orderIds,omitempty"`
 	}
@@ -206,8 +202,6 @@ type (
 		Limit int `json:"limit,omitempty"`
 	}
 	DropNotificationsRequest struct {
-		// Deprecated: prefer IDs.
-		ID string `json:"id,omitempty"`
 		// IDs is a list of notification IDs to drop.
 		IDs []string `json:"ids,omitempty"`
 	}

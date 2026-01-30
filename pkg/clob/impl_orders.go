@@ -244,10 +244,6 @@ func (c *clientImpl) CancelMarketOrders(ctx context.Context, req *clobtypes.Canc
 	var body interface{}
 	if req != nil {
 		market := req.Market
-		if market == "" {
-			//lint:ignore SA1019 backward compatibility for legacy field MarketID
-			market = req.MarketID
-		}
 		payload := map[string]string{}
 		if market != "" {
 			payload["market"] = market
