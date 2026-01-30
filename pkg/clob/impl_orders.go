@@ -206,6 +206,7 @@ func (c *clientImpl) CancelOrder(ctx context.Context, req *clobtypes.CancelOrder
 	if req != nil {
 		orderID := req.OrderID
 		if orderID == "" {
+			//lint:ignore SA1019 backward compatibility for legacy field ID
 			orderID = req.ID
 		}
 		if orderID != "" {
@@ -244,6 +245,7 @@ func (c *clientImpl) CancelMarketOrders(ctx context.Context, req *clobtypes.Canc
 	if req != nil {
 		market := req.Market
 		if market == "" {
+			//lint:ignore SA1019 backward compatibility for legacy field MarketID
 			market = req.MarketID
 		}
 		payload := map[string]string{}

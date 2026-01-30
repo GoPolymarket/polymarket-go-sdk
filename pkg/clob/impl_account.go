@@ -80,7 +80,9 @@ func (c *clientImpl) DropNotifications(ctx context.Context, req *clobtypes.DropN
 	q := url.Values{}
 	if req != nil {
 		ids := req.IDs
+		//lint:ignore SA1019 backward compatibility for legacy field ID
 		if len(ids) == 0 && req.ID != "" {
+			//lint:ignore SA1019 backward compatibility for legacy field ID
 			ids = []string{req.ID}
 		}
 		if len(ids) > 0 {
