@@ -59,7 +59,7 @@ func TestOrderManagementMethods(t *testing.T) {
 		client := &clientImpl{
 			httpClient: transport.NewClient(doer, "http://example"),
 		}
-		resp, err := client.CancelOrder(ctx, &clobtypes.CancelOrderRequest{ID: "o1"})
+		resp, err := client.CancelOrder(ctx, &clobtypes.CancelOrderRequest{OrderID: "o1"})
 		if err != nil || resp.Status != "OK" {
 			t.Errorf("CancelOrder failed: %v", err)
 		}
@@ -72,7 +72,7 @@ func TestOrderManagementMethods(t *testing.T) {
 		client := &clientImpl{
 			httpClient: transport.NewClient(doer, "http://example"),
 		}
-		resp, err := client.CancelOrders(ctx, &clobtypes.CancelOrdersRequest{IDs: []string{"o1"}})
+		resp, err := client.CancelOrders(ctx, &clobtypes.CancelOrdersRequest{OrderIDs: []string{"o1"}})
 		if err != nil || resp.Status != "OK" {
 			t.Errorf("CancelOrders failed: %v", err)
 		}
@@ -85,7 +85,7 @@ func TestOrderManagementMethods(t *testing.T) {
 		client := &clientImpl{
 			httpClient: transport.NewClient(doer, "http://example"),
 		}
-		resp, err := client.CancelMarketOrders(ctx, &clobtypes.CancelMarketOrdersRequest{MarketID: "m1"})
+		resp, err := client.CancelMarketOrders(ctx, &clobtypes.CancelMarketOrdersRequest{Market: "m1"})
 		if err != nil || resp.Status != "OK" {
 			t.Errorf("CancelMarketOrders failed: %v", err)
 		}

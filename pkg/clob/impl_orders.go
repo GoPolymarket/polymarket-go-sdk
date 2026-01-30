@@ -222,9 +222,6 @@ func (c *clientImpl) CancelOrders(ctx context.Context, req *clobtypes.CancelOrde
 	var body interface{}
 	if req != nil {
 		ids := req.OrderIDs
-		if len(ids) == 0 {
-			ids = req.IDs
-		}
 		if len(ids) > 0 {
 			body = ids
 		}
