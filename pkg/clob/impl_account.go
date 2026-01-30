@@ -84,7 +84,7 @@ func (c *clientImpl) DropNotifications(ctx context.Context, req *clobtypes.DropN
 			ids = []string{req.ID}
 		}
 		if len(ids) > 0 {
-			q.Set("ids", strings.Join(ids, ","))
+			q.Set("id", strings.Join(ids, ","))
 		}
 	}
 	var resp clobtypes.DropNotificationsResponse

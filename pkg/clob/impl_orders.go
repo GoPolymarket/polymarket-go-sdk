@@ -209,7 +209,7 @@ func (c *clientImpl) CancelOrder(ctx context.Context, req *clobtypes.CancelOrder
 			orderID = req.ID
 		}
 		if orderID != "" {
-			body = map[string]string{"orderId": orderID}
+			body = map[string]string{"id": orderID}
 		}
 	}
 	err := c.httpClient.Delete(ctx, "/order", body, &resp)

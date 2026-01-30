@@ -150,7 +150,7 @@ type (
 		Market string `json:"market,omitempty"`
 		// AssetID is an optional asset filter.
 		AssetID string `json:"asset_id,omitempty"`
-		// Deprecated: legacy field name.
+		// MarketID is the legacy field.
 		MarketID string `json:"market_id,omitempty"`
 	}
 	OrdersRequest struct {
