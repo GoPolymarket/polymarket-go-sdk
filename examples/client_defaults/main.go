@@ -68,7 +68,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("CreateAPIKey failed: %v", err)
 		}
-		fmt.Printf("API Key: %s\n", resp.APIKey)
+		fmt.Println("API key created successfully.")
 	}
 
 	fmt.Println("\n3. Example order payload (no submit)")
