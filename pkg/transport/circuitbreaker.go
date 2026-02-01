@@ -42,6 +42,9 @@ type CircuitBreaker struct {
 	halfOpenFailure int
 }
 
+// FailurePredicate determines whether an error should count as a circuit breaker failure.
+type FailurePredicate func(error) bool
+
 // CircuitBreakerConfig holds configuration for the circuit breaker.
 type CircuitBreakerConfig struct {
 	MaxFailures     int           // Number of failures before opening the circuit
@@ -89,6 +92,22 @@ func (cb *CircuitBreaker) Call(fn func() error) error {
 	return err
 }
 
+// CallWithFailurePredicate executes the given function and records failures based on the predicate.
+// If shouldCount returns false, the error is treated as a success for breaker statistics.
+func (cb *CircuitBreaker) CallWithFailurePredicate(fn func() error, shouldCount FailurePredicate) error {
+	if err := cb.beforeRequest(); err != nil {
+		return err
+	}
+
+	err := fn()
+	countFailure := err != nil
+	if countFailure && shouldCount != nil {
+		countFailure = shouldCount(err)
+	}
+	cb.afterRequestWithPolicy(err, countFailure)
+	return err
+}
+
 // beforeRequest checks if the request should be allowed.
 func (cb *CircuitBreaker) beforeRequest() error {
 	cb.mu.Lock()
@@ -123,14 +142,22 @@ func (cb *CircuitBreaker) beforeRequest() error {
 
 // afterRequest records the result of the request.
 func (cb *CircuitBreaker) afterRequest(err error) {
+	cb.afterRequestWithPolicy(err, true)
+}
+
+func (cb *CircuitBreaker) afterRequestWithPolicy(err error, countFailure bool) {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 
 	if err != nil {
-		cb.recordFailure()
-	} else {
-		cb.recordSuccess()
+		if countFailure {
+			cb.recordFailure()
+		} else {
+			cb.recordSuccess()
+		}
+		return
 	}
+	cb.recordSuccess()
 }
 
 // recordFailure records a failed request.

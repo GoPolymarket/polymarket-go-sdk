@@ -2,11 +2,15 @@ package transport
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
 )
 
 // MockDoer implements Doer for testing
@@ -93,6 +97,72 @@ func TestClient_Call_Retry(t *testing.T) {
 		}
 		if attempts != 4 {
 			t.Errorf("expected 4 attempts, got %d", attempts)
+		}
+	})
+}
+
+func TestClient_Call_CircuitBreakerIgnoresClientErrors(t *testing.T) {
+	t.Run("4xx does not trip breaker", func(t *testing.T) {
+		mock := &MockDoer{
+			DoFunc: func(req *http.Request) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: 400,
+					Body:       io.NopCloser(strings.NewReader(`{"message":"bad request"}`)),
+				}, nil
+			},
+		}
+
+		cb := NewCircuitBreaker(CircuitBreakerConfig{
+			MaxFailures:     1,
+			ResetTimeout:    time.Second,
+			HalfOpenMaxReqs: 1,
+		})
+		client := NewClient(mock, "http://example.com")
+		client.SetCircuitBreaker(cb)
+
+		err := client.Call(context.Background(), "GET", "/bad", nil, nil, nil, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		var apiErr *types.Error
+		if !errors.As(err, &apiErr) {
+			t.Fatalf("expected *types.Error, got %T", err)
+		}
+		if cb.Failures() != 0 {
+			t.Errorf("Failures() = %d, want 0", cb.Failures())
+		}
+		if cb.State() != StateClosed {
+			t.Errorf("State() = %v, want %v", cb.State(), StateClosed)
+		}
+	})
+
+	t.Run("context cancellation does not trip breaker", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		mock := &MockDoer{
+			DoFunc: func(req *http.Request) (*http.Response, error) {
+				return nil, ctx.Err()
+			},
+		}
+
+		cb := NewCircuitBreaker(CircuitBreakerConfig{
+			MaxFailures:     1,
+			ResetTimeout:    time.Second,
+			HalfOpenMaxReqs: 1,
+		})
+		client := NewClient(mock, "http://example.com")
+		client.SetCircuitBreaker(cb)
+
+		err := client.Call(ctx, "GET", "/canceled", nil, nil, nil, nil)
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context.Canceled, got %v", err)
+		}
+		if cb.Failures() != 0 {
+			t.Errorf("Failures() = %d, want 0", cb.Failures())
+		}
+		if cb.State() != StateClosed {
+			t.Errorf("State() = %v, want %v", cb.State(), StateClosed)
 		}
 	})
 }

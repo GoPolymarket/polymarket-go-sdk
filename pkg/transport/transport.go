@@ -7,8 +7,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -150,12 +152,52 @@ func (c *Client) Call(ctx context.Context, method, path string, query url.Values
 
 	// Apply circuit breaker if configured
 	if c.circuitBreaker != nil {
-		return c.circuitBreaker.Call(func() error {
+		return c.circuitBreaker.CallWithFailurePredicate(func() error {
 			return c.doCall(ctx, method, path, query, body, dest, headers)
-		})
+		}, shouldCountCircuitBreakerFailure)
 	}
 
 	return c.doCall(ctx, method, path, query, body, dest, headers)
+}
+
+func shouldCountCircuitBreakerFailure(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	var apiErr *types.Error
+	if errors.As(err, &apiErr) {
+		if apiErr.Status >= 400 && apiErr.Status < 500 {
+			return false
+		}
+	}
+	var statusErr interface{ StatusCode() int }
+	if errors.As(err, &statusErr) {
+		status := statusErr.StatusCode()
+		if status >= 400 && status < 500 {
+			return false
+		}
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return false
+	}
+	return true
+}
+
+type httpStatusError struct {
+	status int
+	body   string
+}
+
+func (e *httpStatusError) Error() string {
+	return fmt.Sprintf("server error %d: %s", e.status, e.body)
+}
+
+func (e *httpStatusError) StatusCode() int {
+	return e.status
 }
 
 // doCall performs the actual HTTP request without rate limiting or circuit breaker.
@@ -270,7 +312,7 @@ func (c *Client) doCall(ctx context.Context, method, path string, query url.Valu
 		if resp.StatusCode >= 400 {
 			// Check if retryable (429 or 5xx)
 			if resp.StatusCode == 429 || resp.StatusCode >= 500 {
-				lastErr = fmt.Errorf("server error %d: %s", resp.StatusCode, string(respBytes))
+				lastErr = &httpStatusError{status: resp.StatusCode, body: string(respBytes)}
 				continue
 			}
 

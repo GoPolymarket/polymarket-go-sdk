@@ -8,9 +8,9 @@ import (
 
 func TestNewCircuitBreaker(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         CircuitBreakerConfig
-		expectedState  CircuitState
+		name            string
+		config          CircuitBreakerConfig
+		expectedState   CircuitState
 		expectedMaxFail int
 	}{
 		{
@@ -329,6 +329,52 @@ func TestCircuitBreaker_Stats(t *testing.T) {
 		}
 		if stats.LastFailTime.IsZero() {
 			t.Error("Stats.LastFailTime should not be zero")
+		}
+	})
+}
+
+func TestCircuitBreaker_CallWithFailurePredicate(t *testing.T) {
+	t.Run("does not count failures when predicate returns false", func(t *testing.T) {
+		cb := NewCircuitBreaker(CircuitBreakerConfig{
+			MaxFailures:     1,
+			ResetTimeout:    60 * time.Second,
+			HalfOpenMaxReqs: 1,
+		})
+
+		err := cb.CallWithFailurePredicate(func() error { return errors.New("ignored") }, func(err error) bool {
+			return false
+		})
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if cb.Failures() != 0 {
+			t.Errorf("Failures() = %d, want 0", cb.Failures())
+		}
+		if cb.State() != StateClosed {
+			t.Errorf("State() = %v, want %v", cb.State(), StateClosed)
+		}
+	})
+
+	t.Run("counts failures when predicate returns true", func(t *testing.T) {
+		cb := NewCircuitBreaker(CircuitBreakerConfig{
+			MaxFailures:     1,
+			ResetTimeout:    60 * time.Second,
+			HalfOpenMaxReqs: 1,
+		})
+
+		err := cb.CallWithFailurePredicate(func() error { return errors.New("counted") }, func(err error) bool {
+			return true
+		})
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if cb.Failures() != 1 {
+			t.Errorf("Failures() = %d, want 1", cb.Failures())
+		}
+		if cb.State() != StateOpen {
+			t.Errorf("State() = %v, want %v", cb.State(), StateOpen)
 		}
 	})
 }
