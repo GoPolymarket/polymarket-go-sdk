@@ -106,7 +106,7 @@ func TestCircuitBreaker_OpenState(t *testing.T) {
 
 		// Fail 3 times to open the circuit
 		for i := 0; i < 3; i++ {
-			cb.Call(func() error { return errors.New("error") })
+			_ = cb.Call(func() error { return errors.New("error") })
 		}
 
 		if cb.State() != StateOpen {
@@ -122,8 +122,8 @@ func TestCircuitBreaker_OpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		// Try to make a request
 		callCount := 0
@@ -148,8 +148,8 @@ func TestCircuitBreaker_OpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		if cb.State() != StateOpen {
 			t.Errorf("State() = %v, want %v", cb.State(), StateOpen)
@@ -160,7 +160,7 @@ func TestCircuitBreaker_OpenState(t *testing.T) {
 
 		// Next request should transition to half-open
 		callCount := 0
-		cb.Call(func() error {
+		_ = cb.Call(func() error {
 			callCount++
 			return nil
 		})
@@ -183,8 +183,8 @@ func TestCircuitBreaker_HalfOpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		// Wait for reset timeout
 		time.Sleep(100 * time.Millisecond)
@@ -211,15 +211,15 @@ func TestCircuitBreaker_HalfOpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		// Wait for reset timeout
 		time.Sleep(100 * time.Millisecond)
 
 		// Make successful requests in half-open state
-		cb.Call(func() error { return nil })
-		cb.Call(func() error { return nil })
+		_ = cb.Call(func() error { return nil })
+		_ = cb.Call(func() error { return nil })
 
 		if cb.State() != StateClosed {
 			t.Errorf("State() = %v, want %v (should close after successful half-open requests)", cb.State(), StateClosed)
@@ -237,17 +237,17 @@ func TestCircuitBreaker_HalfOpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		// Wait for reset timeout
 		time.Sleep(100 * time.Millisecond)
 
 		// First request succeeds
-		cb.Call(func() error { return nil })
+		_ = cb.Call(func() error { return nil })
 
 		// Second request fails
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		if cb.State() != StateOpen {
 			t.Errorf("State() = %v, want %v (should reopen on failure)", cb.State(), StateOpen)
@@ -262,15 +262,15 @@ func TestCircuitBreaker_HalfOpenState(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		// Wait for reset timeout
 		time.Sleep(100 * time.Millisecond)
 
 		// Make 2 successful requests (at the limit)
-		cb.Call(func() error { return nil })
-		cb.Call(func() error { return nil })
+		_ = cb.Call(func() error { return nil })
+		_ = cb.Call(func() error { return nil })
 
 		// Circuit should now be closed
 		if cb.State() != StateClosed {
@@ -288,8 +288,8 @@ func TestCircuitBreaker_Reset(t *testing.T) {
 		})
 
 		// Open the circuit
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		if cb.State() != StateOpen {
 			t.Errorf("State() = %v, want %v", cb.State(), StateOpen)
@@ -316,8 +316,8 @@ func TestCircuitBreaker_Stats(t *testing.T) {
 		})
 
 		// Fail twice
-		cb.Call(func() error { return errors.New("error") })
-		cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
+		_ = cb.Call(func() error { return errors.New("error") })
 
 		stats := cb.Stats()
 
@@ -349,9 +349,9 @@ func TestCircuitBreaker_Concurrent(t *testing.T) {
 
 				// Alternate between success and failure
 				if id%2 == 0 {
-					cb.Call(func() error { return nil })
+					_ = cb.Call(func() error { return nil })
 				} else {
-					cb.Call(func() error { return errors.New("error") })
+					_ = cb.Call(func() error { return errors.New("error") })
 				}
 			}(i)
 		}
