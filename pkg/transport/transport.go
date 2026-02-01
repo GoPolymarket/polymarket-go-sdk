@@ -143,18 +143,24 @@ func (c *Client) SetUseServerTime(use bool) {
 // It handles payload serialization, authentication header injection, and retry logic.
 // Retryable errors include HTTP 429 (Rate Limit) and 5xx (Server Error).
 func (c *Client) Call(ctx context.Context, method, path string, query url.Values, body interface{}, dest interface{}, headers map[string]string) error {
-	// Apply rate limiting if configured
+	// Apply circuit breaker if configured
+	if c.circuitBreaker != nil {
+		return c.circuitBreaker.CallWithFailurePredicate(func() error {
+			// Apply rate limiting only after breaker allows the request.
+			if c.rateLimiter != nil {
+				if err := c.rateLimiter.Wait(ctx); err != nil {
+					return fmt.Errorf("rate limiter: %w", err)
+				}
+			}
+			return c.doCall(ctx, method, path, query, body, dest, headers)
+		}, shouldCountCircuitBreakerFailure)
+	}
+
+	// Apply rate limiting if configured (no circuit breaker).
 	if c.rateLimiter != nil {
 		if err := c.rateLimiter.Wait(ctx); err != nil {
 			return fmt.Errorf("rate limiter: %w", err)
 		}
-	}
-
-	// Apply circuit breaker if configured
-	if c.circuitBreaker != nil {
-		return c.circuitBreaker.CallWithFailurePredicate(func() error {
-			return c.doCall(ctx, method, path, query, body, dest, headers)
-		}, shouldCountCircuitBreakerFailure)
 	}
 
 	return c.doCall(ctx, method, path, query, body, dest, headers)
