@@ -2,6 +2,8 @@ module github.com/GoPolymarket/polymarket-go-sdk
 
 go 1.24.0
 
+toolchain go1.24.13
+
 require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.5
 	github.com/ethereum/go-ethereum v1.16.8
