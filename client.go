@@ -66,6 +66,13 @@ func NewClient(opts ...Option) *Client {
 		bridgeTransport.SetUserAgent(c.Config.UserAgent)
 		c.Bridge = bridge.NewClient(bridgeTransport)
 	}
+	if c.RTDS == nil {
+		rtdsURL := c.Config.BaseURLs.RTDS
+		if rtdsURL == "" {
+			rtdsURL = rtds.ProdURL
+		}
+		c.RTDS, _ = rtds.NewClient(rtdsURL)
+	}
 	if c.CTF == nil {
 		c.CTF = ctf.NewClient()
 	}
