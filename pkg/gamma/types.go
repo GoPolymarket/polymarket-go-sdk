@@ -1,5 +1,7 @@
 package gamma
 
+import "encoding/json"
+
 // Request parameters
 type MarketsRequest struct {
 	Limit               *int     `json:"limit,omitempty"`
@@ -215,8 +217,33 @@ type Market struct {
 	MarketMakerAddress string  `json:"marketMakerAddress"`
 	Tags               []Tag   `json:"tags"`
 	Tokens             []Token `json:"tokens"`
-	ClobTokenIds       string  `json:"clobTokenIds"` // JSON string of token IDs
+	ClobTokenIds       string  `json:"clobTokenIds"`     // JSON string of token IDs
+	Outcomes           string  `json:"outcomes"`          // JSON string of outcome labels
+	OutcomePrices      string  `json:"outcomePrices"`     // JSON string of outcome prices
 	Rewards            Rewards `json:"rewards"`
+}
+
+// ParsedTokens builds a Token slice by combining ClobTokenIds and Outcomes.
+// Returns nil if the fields cannot be parsed.
+func (m *Market) ParsedTokens() []Token {
+	if len(m.Tokens) > 0 {
+		return m.Tokens
+	}
+	var ids []string
+	if err := json.Unmarshal([]byte(m.ClobTokenIds), &ids); err != nil {
+		return nil
+	}
+	var outcomes []string
+	_ = json.Unmarshal([]byte(m.Outcomes), &outcomes)
+
+	tokens := make([]Token, len(ids))
+	for i, id := range ids {
+		tokens[i].TokenID = id
+		if i < len(outcomes) {
+			tokens[i].Outcome = outcomes[i]
+		}
+	}
+	return tokens
 }
 
 type Tag struct {
