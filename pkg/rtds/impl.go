@@ -410,6 +410,26 @@ func (c *clientImpl) SubscribeCommentsStream(ctx context.Context, req *CommentFi
 	}), nil
 }
 
+func (c *clientImpl) SubscribeOrdersMatchedStream(ctx context.Context) (*Stream[OrdersMatchedEvent], error) {
+	sub := Subscription{Topic: string(Activity), MsgType: "orders_matched"}
+	rawStream, err := c.subscribeRawStream(sub, nil)
+	if err != nil {
+		return nil, err
+	}
+	return mapStream(rawStream, sub.Topic, sub.MsgType, func(msg RtdsMessage) (OrdersMatchedEvent, bool) {
+		var payload OrdersMatchedEvent
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return OrdersMatchedEvent{}, false
+		}
+		payload.BaseEvent = BaseEvent{
+			Topic:            Activity,
+			MessageType:      msg.MsgType,
+			MessageTimestamp: msg.Timestamp,
+		}
+		return payload, true
+	}), nil
+}
+
 func (c *clientImpl) SubscribeRawStream(ctx context.Context, sub *Subscription) (*Stream[RtdsMessage], error) {
 	if sub == nil {
 		return nil, ErrInvalidSubscription
@@ -435,6 +455,14 @@ func (c *clientImpl) SubscribeChainlinkPrices(ctx context.Context, feeds []strin
 
 func (c *clientImpl) SubscribeComments(ctx context.Context, req *CommentFilter) (<-chan CommentEvent, error) {
 	stream, err := c.SubscribeCommentsStream(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return stream.C, nil
+}
+
+func (c *clientImpl) SubscribeOrdersMatched(ctx context.Context) (<-chan OrdersMatchedEvent, error) {
+	stream, err := c.SubscribeOrdersMatchedStream(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -467,6 +495,10 @@ func (c *clientImpl) UnsubscribeComments(ctx context.Context, commentType *Comme
 		msgType = string(*commentType)
 	}
 	return c.unsubscribeTopic(string(Comments), msgType)
+}
+
+func (c *clientImpl) UnsubscribeOrdersMatched(ctx context.Context) error {
+	return c.unsubscribeTopic(string(Activity), "orders_matched")
 }
 
 func (c *clientImpl) UnsubscribeRaw(ctx context.Context, sub *Subscription) error {

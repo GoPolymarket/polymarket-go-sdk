@@ -90,6 +90,7 @@ const (
 	CryptoPrice    EventType = "crypto_prices"
 	ChainlinkPrice EventType = "crypto_prices_chainlink"
 	Comments       EventType = "comments"
+	Activity       EventType = "activity"
 )
 
 // BaseEvent carries message metadata.
@@ -148,6 +149,29 @@ type CommentEvent struct {
 	ReplyAddress     *types.Address `json:"replyAddress,omitempty"`
 	ReportCount      int64          `json:"reportCount,omitempty"`
 	UserAddress      types.Address  `json:"userAddress"`
+}
+
+// OrdersMatchedEvent is an activity stream payload for matched orders.
+type OrdersMatchedEvent struct {
+	BaseEvent
+	Asset           string  `json:"asset"`
+	Bio             string  `json:"bio"`
+	ConditionID     string  `json:"conditionId"`
+	EventSlug       string  `json:"eventSlug"`
+	Icon            string  `json:"icon"`
+	Name            string  `json:"name"`
+	Outcome         string  `json:"outcome"`
+	OutcomeIndex    int     `json:"outcomeIndex"`
+	Price           float64 `json:"price"`
+	ProfileImage    string  `json:"profileImage"`
+	ProxyWallet     string  `json:"proxyWallet"`
+	Pseudonym       string  `json:"pseudonym"`
+	Side            string  `json:"side"`
+	Size            float64 `json:"size"`
+	Slug            string  `json:"slug"`
+	Timestamp       int64   `json:"timestamp"`
+	Title           string  `json:"title"`
+	TransactionHash string  `json:"transactionHash"`
 }
 
 // CommentFilter configures the comments subscription.
