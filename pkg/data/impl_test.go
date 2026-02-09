@@ -52,8 +52,6 @@ func (d *staticDoer) Do(req *http.Request) (*http.Response, error) {
 
 func intPtr(v int) *int       { return &v }
 func int64Ptr(v int64) *int64 { return &v }
-func strPtr(v string) *string { return &v }
-func boolPtr(v bool) *bool    { return &v }
 
 func TestNewClientNilTransport(t *testing.T) {
 	// Should not panic with nil transport.
