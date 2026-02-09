@@ -113,7 +113,7 @@ func TestAccountMethods(t *testing.T) {
 	t.Run("UserRewardsByMarket", func(t *testing.T) {
 		doer := &staticDoer{
 			responses: map[string]string{
-				"/rewards/user/total?date=2025-01-01&no_competition=false&signature_type=0": `[{"condition_id":"c1","question":"q","market_slug":"m","event_slug":"e","image":"i","rewards_max_spread":"0.1","rewards_min_size":"1","market_competitiveness":"0.5","maker_address":"m1","earning_percentage":"0.2"}]`,
+				"/rewards/user/by-market?date=2025-01-01&no_competition=false&signature_type=0": `[{"condition_id":"c1","question":"q","market_slug":"m","event_slug":"e","image":"i","rewards_max_spread":"0.1","rewards_min_size":"1","market_competitiveness":"0.5","maker_address":"m1","earning_percentage":"0.2"}]`,
 			},
 		}
 		client := &clientImpl{httpClient: transport.NewClient(doer, "http://example")}
@@ -128,7 +128,7 @@ func TestAccountMethods(t *testing.T) {
 
 	t.Run("UpdateBalanceAllowanceEmptyBody", func(t *testing.T) {
 		doer := &staticDoer{
-			responses: map[string]string{"/balance-allowance/update?asset=USDC&signature_type=0": ``},
+			responses: map[string]string{"/balance-allowance/update?asset=USDC&signature_type=0": `{"balance":"0","allowances":{}}`},
 		}
 		client := &clientImpl{httpClient: transport.NewClient(doer, "http://example")}
 		_, err := client.UpdateBalanceAllowance(ctx, &clobtypes.BalanceAllowanceUpdateRequest{Asset: "USDC"})

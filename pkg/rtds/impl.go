@@ -104,6 +104,8 @@ type clientImpl struct {
 	conn      *websocket.Conn
 	mu        sync.Mutex
 	done      chan struct{}
+	connReady chan struct{}
+	connOnce  sync.Once
 	state     int32
 	closeOnce sync.Once
 	closing   atomic.Bool
@@ -152,6 +154,7 @@ func NewClient(url string) (Client, error) {
 	c := &clientImpl{
 		url:            url,
 		done:           make(chan struct{}),
+		connReady:      make(chan struct{}),
 		stateSubs:      make(map[string]*stateSubscription),
 		subRefs:        make(map[string]int),
 		subDetails:     make(map[string]Subscription),
@@ -191,6 +194,7 @@ func (c *clientImpl) connect() error {
 	}
 	c.conn = conn
 	c.setState(ConnectionConnected)
+	c.connOnce.Do(func() { close(c.connReady) })
 	return nil
 }
 
@@ -603,6 +607,14 @@ func (c *clientImpl) subscribeRaw(sub Subscription, filter func(RtdsMessage) boo
 	if strings.TrimSpace(sub.Topic) == "" || strings.TrimSpace(sub.MsgType) == "" {
 		return nil, ErrInvalidSubscription
 	}
+
+	// Wait for the WebSocket connection to be established before subscribing.
+	select {
+	case <-c.connReady:
+	case <-c.done:
+		return nil, errors.New("client closed before connection was established")
+	}
+
 	key := subscriptionKey(sub.Topic, sub.MsgType)
 
 	c.subMu.Lock()

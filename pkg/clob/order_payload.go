@@ -113,8 +113,8 @@ func saltToJSON(value types.U256) (interface{}, error) {
 	if value.Int.Sign() < 0 {
 		return nil, fmt.Errorf("salt must be non-negative")
 	}
-	if value.Int.BitLen() > 63 {
-		return nil, fmt.Errorf("salt is too large")
+	if value.Int.BitLen() > 53 {
+		return nil, fmt.Errorf("salt is too large (max 53 bits)")
 	}
 	return value.Int.Uint64(), nil
 }

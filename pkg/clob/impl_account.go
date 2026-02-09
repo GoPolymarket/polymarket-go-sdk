@@ -62,7 +62,7 @@ func (c *clientImpl) UpdateBalanceAllowance(ctx context.Context, req *clobtypes.
 		}
 	}
 	var resp clobtypes.BalanceAllowanceResponse
-	err := c.httpClient.Call(ctx, "GET", "/balance-allowance/update", q, nil, nil, nil)
+	err := c.httpClient.Call(ctx, "GET", "/balance-allowance/update", q, nil, &resp, nil)
 	return resp, mapError(err)
 }
 
@@ -202,7 +202,7 @@ func (c *clientImpl) UserRewardsByMarket(ctx context.Context, req *clobtypes.Use
 		}
 	}
 	var resp clobtypes.UserRewardsByMarketResponse
-	err := c.httpClient.Get(ctx, "/rewards/user/total", q, &resp)
+	err := c.httpClient.Get(ctx, "/rewards/user/by-market", q, &resp)
 	return resp, mapError(err)
 }
 

@@ -71,10 +71,9 @@ type SignatureType int
 
 const (
 	// SignatureEOA indicates a standard Externally Owned Account (EOA).
-	SignatureEOA SignatureType = iota
-	// SignatureMagic indicates a signature from a Magic.link wallet.
-	SignatureMagic
+	SignatureEOA SignatureType = 0
 	// SignatureProxy indicates a signature from a Polymarket Proxy wallet.
+	// Magic.link wallets use the same proxy factory, so SignatureProxy covers both.
 	SignatureProxy SignatureType = 1
 	// SignatureGnosisSafe indicates a signature from a Gnosis Safe multisig.
 	SignatureGnosisSafe SignatureType = 2

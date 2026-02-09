@@ -172,8 +172,8 @@ func TestSignedOrder_JSON(t *testing.T) {
 func TestPricesHistoryResponse_UnmarshalJSON_Array(t *testing.T) {
 	// Test direct array format
 	jsonData := `[
-		{"t": 1234567890, "p": "0.5"},
-		{"t": 1234567900, "p": "0.6"}
+		{"t": 1234567890, "p": 0.5},
+		{"t": 1234567900, "p": 0.6}
 	]`
 
 	var resp PricesHistoryResponse
@@ -188,14 +188,14 @@ func TestPricesHistoryResponse_UnmarshalJSON_Array(t *testing.T) {
 	if resp[0].Timestamp != 1234567890 {
 		t.Errorf("Point[0].Timestamp = %d, want 1234567890", resp[0].Timestamp)
 	}
-	if resp[0].Price != "0.5" {
-		t.Errorf("Point[0].Price = %s, want 0.5", resp[0].Price)
+	if resp[0].Price != 0.5 {
+		t.Errorf("Point[0].Price = %f, want 0.5", resp[0].Price)
 	}
 	if resp[1].Timestamp != 1234567900 {
 		t.Errorf("Point[1].Timestamp = %d, want 1234567900", resp[1].Timestamp)
 	}
-	if resp[1].Price != "0.6" {
-		t.Errorf("Point[1].Price = %s, want 0.6", resp[1].Price)
+	if resp[1].Price != 0.6 {
+		t.Errorf("Point[1].Price = %f, want 0.6", resp[1].Price)
 	}
 }
 
@@ -203,8 +203,8 @@ func TestPricesHistoryResponse_UnmarshalJSON_HistoryWrapper(t *testing.T) {
 	// Test wrapped format with "history" key
 	jsonData := `{
 		"history": [
-			{"t": 1234567890, "p": "0.5"},
-			{"t": 1234567900, "p": "0.6"}
+			{"t": 1234567890, "p": 0.5},
+			{"t": 1234567900, "p": 0.6}
 		]
 	}`
 
@@ -220,8 +220,8 @@ func TestPricesHistoryResponse_UnmarshalJSON_HistoryWrapper(t *testing.T) {
 	if resp[0].Timestamp != 1234567890 {
 		t.Errorf("Point[0].Timestamp = %d, want 1234567890", resp[0].Timestamp)
 	}
-	if resp[0].Price != "0.5" {
-		t.Errorf("Point[0].Price = %s, want 0.5", resp[0].Price)
+	if resp[0].Price != 0.5 {
+		t.Errorf("Point[0].Price = %f, want 0.5", resp[0].Price)
 	}
 }
 
@@ -229,8 +229,8 @@ func TestPricesHistoryResponse_UnmarshalJSON_DataWrapper(t *testing.T) {
 	// Test wrapped format with "data" key
 	jsonData := `{
 		"data": [
-			{"t": 1234567890, "p": "0.5"},
-			{"t": 1234567900, "p": "0.6"}
+			{"t": 1234567890, "p": 0.5},
+			{"t": 1234567900, "p": 0.6}
 		]
 	}`
 
@@ -293,8 +293,8 @@ func TestPricesHistoryResponse_UnmarshalJSON_EmptyWrapper(t *testing.T) {
 func TestPricesHistoryResponse_UnmarshalJSON_HistoryPriority(t *testing.T) {
 	// Test that "history" takes priority over "data" when both are present
 	jsonData := `{
-		"history": [{"t": 1111111111, "p": "0.1"}],
-		"data": [{"t": 2222222222, "p": "0.2"}]
+		"history": [{"t": 1111111111, "p": 0.1}],
+		"data": [{"t": 2222222222, "p": 0.2}]
 	}`
 
 	var resp PricesHistoryResponse
