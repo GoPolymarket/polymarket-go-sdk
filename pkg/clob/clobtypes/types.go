@@ -454,8 +454,8 @@ type (
 	}
 
 	PriceHistoryPoint struct {
-		Timestamp int64  `json:"t"`
-		Price     string `json:"p"`
+		Timestamp int64   `json:"t"`
+		Price     float64 `json:"p"`
 	}
 
 	Trade struct {

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/rtds"
 )
@@ -19,6 +20,31 @@ func main() {
 	}
 	defer client.Close()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	stateStream, err := client.ConnectionStateStream(ctx)
+	if err != nil {
+		log.Fatalf("Failed to monitor connection state: %v", err)
+	}
+	for {
+		select {
+		case event, ok := <-stateStream.C:
+			if !ok {
+				log.Fatal("Connection state stream closed")
+			}
+			if event.State == rtds.ConnectionConnected {
+				_ = stateStream.Close()
+				goto connected
+			}
+		case err := <-stateStream.Err:
+			log.Printf("Connection state warning: %v", err)
+		case <-ctx.Done():
+			log.Fatalf("Timed out waiting for connection: %v", ctx.Err())
+		}
+	}
+
+connected:
 	// 2. Subscribe to Crypto Prices
 	// Symbols follow Binance pairs like "btcusdt", "ethusdt"
 	symbols := []string{"btcusdt", "ethusdt"}
