@@ -39,6 +39,12 @@ type clientImpl struct {
 	done         chan struct{}
 	closeOnce    sync.Once
 	closing      atomic.Bool
+	// Per-connection context cancellation for goroutine lifecycle management
+	marketCtx       context.Context
+	marketCancel    context.CancelFunc
+	userCtx         context.Context
+	userCancel      context.CancelFunc
+	goroutineCtxMu  sync.Mutex
 	// Subscription state
 	debug               bool
 	disablePing         bool
@@ -236,8 +242,18 @@ func (c *clientImpl) pingLoop(channel Channel) {
 	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
+
+	// Get the context for this connection to enable proper cancellation
+	ctx := c.getGoroutineContext(channel)
+	if ctx == nil {
+		return
+	}
+
 	for {
 		select {
+		case <-ctx.Done():
+			// Context cancelled - connection is being replaced or closed
+			return
 		case <-c.done:
 			return
 		case <-ticker.C:
@@ -267,6 +283,13 @@ func (c *clientImpl) ensureMarketConn() error {
 		return nil
 	}
 	c.setConnState(ChannelMarket, ConnectionConnecting, 0)
+
+	// Cancel any existing goroutines for this connection
+	c.cancelGoroutines(ChannelMarket)
+
+	// Create new context for this connection's goroutines
+	c.createGoroutineContext(ChannelMarket)
+
 	if err := c.connectMarket(); err != nil {
 		c.setConnState(ChannelMarket, ConnectionDisconnected, 0)
 		return err
@@ -287,6 +310,13 @@ func (c *clientImpl) ensureUserConn() error {
 		return nil
 	}
 	c.setConnState(ChannelUser, ConnectionConnecting, 0)
+
+	// Cancel any existing goroutines for this connection
+	c.cancelGoroutines(ChannelUser)
+
+	// Create new context for this connection's goroutines
+	c.createGoroutineContext(ChannelUser)
+
 	if err := c.connectUser(); err != nil {
 		c.setConnState(ChannelUser, ConnectionDisconnected, 0)
 		return err
@@ -339,6 +369,12 @@ func (c *clientImpl) connectUser() error {
 }
 
 func (c *clientImpl) readLoop(channel Channel) {
+	// Get the context for this connection to enable proper cancellation
+	ctx := c.getGoroutineContext(channel)
+	if ctx == nil {
+		return
+	}
+
 	// Set initial read deadline
 	if conn := c.getConn(channel); conn != nil {
 		timeout := time.Duration(c.readTimeout.Load())
@@ -346,6 +382,14 @@ func (c *clientImpl) readLoop(channel Channel) {
 	}
 
 	for {
+		// Check if context is cancelled before reading
+		select {
+		case <-ctx.Done():
+			// Context cancelled - connection is being replaced or closed
+			return
+		default:
+		}
+
 		conn := c.getConn(channel)
 		if conn == nil {
 			if c.closing.Load() {
@@ -1354,7 +1398,14 @@ func (c *clientImpl) reconnectLoop(channel Channel) error {
 		}
 		c.setConnState(channel, ConnectionReconnecting, attempt+1)
 		time.Sleep(delay)
+
+		// Cancel old goroutines and close old connection
+		c.cancelGoroutines(channel)
 		c.closeConn(channel)
+
+		// Create new context for new connection's goroutines
+		c.createGoroutineContext(channel)
+
 		var err error
 		switch channel {
 		case ChannelMarket:
@@ -1501,9 +1552,24 @@ func (c *clientImpl) setUserConn(conn *websocket.Conn) {
 }
 
 func (c *clientImpl) closeConn(channel Channel) {
+	// Cancel goroutines before closing connection
+	c.cancelGoroutines(channel)
+
 	conn := c.getConn(channel)
 	if conn != nil {
 		_ = conn.Close()
+	}
+
+	// Set connection to nil after closing to prevent race conditions
+	switch channel {
+	case ChannelUser:
+		c.userMu.Lock()
+		c.userConn = nil
+		c.userMu.Unlock()
+	default:
+		c.mu.Lock()
+		c.conn = nil
+		c.mu.Unlock()
 	}
 }
 
@@ -1583,5 +1649,57 @@ func (c *clientImpl) setConnState(channel Channel, state ConnectionState, attemp
 
 	for _, sub := range subs {
 		sub.trySend(event)
+	}
+}
+
+// createGoroutineContext creates a new context for managing goroutines for a specific channel.
+// Must be called before starting readLoop and pingLoop goroutines.
+func (c *clientImpl) createGoroutineContext(channel Channel) {
+	c.goroutineCtxMu.Lock()
+	defer c.goroutineCtxMu.Unlock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	switch channel {
+	case ChannelMarket:
+		c.marketCtx = ctx
+		c.marketCancel = cancel
+	case ChannelUser:
+		c.userCtx = ctx
+		c.userCancel = cancel
+	}
+}
+
+// cancelGoroutines cancels the context for a specific channel, signaling all associated
+// goroutines (readLoop, pingLoop) to exit gracefully.
+func (c *clientImpl) cancelGoroutines(channel Channel) {
+	c.goroutineCtxMu.Lock()
+	defer c.goroutineCtxMu.Unlock()
+
+	switch channel {
+	case ChannelMarket:
+		if c.marketCancel != nil {
+			c.marketCancel()
+			c.marketCancel = nil
+		}
+	case ChannelUser:
+		if c.userCancel != nil {
+			c.userCancel()
+			c.userCancel = nil
+		}
+	}
+}
+
+// getGoroutineContext returns the context for a specific channel's goroutines.
+func (c *clientImpl) getGoroutineContext(channel Channel) context.Context {
+	c.goroutineCtxMu.Lock()
+	defer c.goroutineCtxMu.Unlock()
+
+	switch channel {
+	case ChannelMarket:
+		return c.marketCtx
+	case ChannelUser:
+		return c.userCtx
+	default:
+		return nil
 	}
 }

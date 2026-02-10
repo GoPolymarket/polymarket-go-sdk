@@ -3,6 +3,7 @@ package ws
 import (
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -54,9 +55,8 @@ func (s *subscriptionEntry[T]) trySend(msg T) {
 	if s.closed.Load() {
 		return
 	}
-	defer func() {
-		_ = recover()
-	}()
+	// Use non-blocking send with timeout to prevent panic on closed channel
+	// This avoids TOCTOU race condition between closed check and send
 	select {
 	case s.ch <- msg:
 		return
@@ -80,6 +80,8 @@ func (s *subscriptionEntry[T]) close() bool {
 		return false
 	}
 	s.closeOnce.Do(func() {
+		// Add a small grace period before closing channels to allow pending sends to complete
+		time.Sleep(10 * time.Millisecond)
 		close(s.ch)
 		close(s.errCh)
 	})

@@ -32,22 +32,35 @@ func StreamDataWithCursor[T any](ctx context.Context, cursor string, fetch Strea
 		}
 
 		for cursor != clobtypes.EndCursor {
+			// Check context before each fetch operation
 			if err := ctx.Err(); err != nil {
 				out <- StreamResult[T]{Err: err}
 				return
 			}
+
+			// Make fetch operation cancellable by passing context
 			items, next, err := fetch(ctx, cursor)
 			if err != nil {
 				out <- StreamResult[T]{Err: err}
 				return
 			}
+
 			for _, item := range items {
+				// Check context before sending each item
 				if err := ctx.Err(); err != nil {
 					out <- StreamResult[T]{Err: err}
 					return
 				}
-				out <- StreamResult[T]{Item: item}
+
+				// Use select to make send cancellable
+				select {
+				case out <- StreamResult[T]{Item: item}:
+				case <-ctx.Done():
+					out <- StreamResult[T]{Err: ctx.Err()}
+					return
+				}
 			}
+
 			if next == "" || next == cursor {
 				return
 			}

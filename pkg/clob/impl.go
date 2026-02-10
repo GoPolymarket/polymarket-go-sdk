@@ -376,9 +376,18 @@ func (c *clientImpl) startHeartbeats() {
 	if c.httpClient == nil || c.signer == nil || c.apiKey == nil || c.heartbeat == nil {
 		return
 	}
+
+	// Stop old heartbeat goroutine if it exists
 	if c.heartbeatStop != nil {
-		close(c.heartbeatStop)
+		oldStop := c.heartbeatStop
+		c.heartbeatStop = nil
+		close(oldStop)
+		// Add a small delay to allow old goroutine to exit
+		c.heartbeatMu.Unlock()
+		time.Sleep(50 * time.Millisecond)
+		c.heartbeatMu.Lock()
 	}
+
 	stop := make(chan struct{})
 	c.heartbeatStop = stop
 	interval := c.heartbeatInterval
