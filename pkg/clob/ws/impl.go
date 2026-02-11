@@ -1690,6 +1690,9 @@ func (c *clientImpl) createGoroutineContext(channel Channel) {
 	case ChannelUser:
 		c.userCtx = ctx
 		c.userCancel = cancel
+	default:
+		// Cancel immediately if channel is unknown to prevent context leak
+		cancel()
 	}
 }
 

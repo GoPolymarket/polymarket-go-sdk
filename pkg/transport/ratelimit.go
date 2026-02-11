@@ -14,7 +14,6 @@ type RateLimiter struct {
 	tokens         float64
 	lastRefill     time.Time
 	stopped        bool
-	stopOnce       sync.Once
 }
 
 // NewRateLimiter creates a new rate limiter with the specified requests per second.

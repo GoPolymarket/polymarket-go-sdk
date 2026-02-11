@@ -199,7 +199,7 @@ func TestSubscriptionPanic_DispatchToClosedSubscription(t *testing.T) {
 
 		// Send some events
 		for i := 0; i < 10; i++ {
-			conn.WriteMessage(websocket.TextMessage, []byte(`{"event_type":"price","asset_id":"test","price":"0.5"}`))
+			_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"event_type":"price","asset_id":"test","price":"0.5"}`))
 			time.Sleep(10 * time.Millisecond)
 		}
 	}))
