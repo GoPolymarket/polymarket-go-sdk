@@ -3,7 +3,6 @@ package ws
 import (
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 const (
@@ -83,8 +82,9 @@ func (s *subscriptionEntry[T]) close() bool {
 		return false
 	}
 	s.closeOnce.Do(func() {
-		// Add a small grace period before closing channels to allow pending sends to complete
-		time.Sleep(10 * time.Millisecond)
+		// Close channels immediately after setting closed flag
+		// trySend() and notifyLag() use non-blocking sends with closed checks,
+		// so they won't panic on closed channels
 		close(s.ch)
 		close(s.errCh)
 	})
