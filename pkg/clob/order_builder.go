@@ -26,7 +26,7 @@ type OrderBuilder struct {
 	price      decimal.Decimal
 	size       decimal.Decimal
 	feeRateBps decimal.Decimal
-	tickSize   string
+	tickSize   float64
 	orderType  clobtypes.OrderType
 
 	// Optional overrides
@@ -128,7 +128,7 @@ func (b *OrderBuilder) FeeRateBpsDec(bps decimal.Decimal) *OrderBuilder {
 }
 
 // TickSize sets a manual tick size override (e.g. "0.01").
-func (b *OrderBuilder) TickSize(tickSize string) *OrderBuilder {
+func (b *OrderBuilder) TickSize(tickSize float64) *OrderBuilder {
 	b.tickSize = tickSize
 	return b
 }
@@ -528,14 +528,8 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 
 func (b *OrderBuilder) resolveTickSize(ctx context.Context, tokenID string) (decimal.Decimal, error) {
 	var override *decimal.Decimal
-	if b.tickSize != "" {
-		parsed, err := decimal.NewFromString(b.tickSize)
-		if err != nil {
-			return decimal.Decimal{}, fmt.Errorf("invalid tick size: %w", err)
-		}
-		if parsed.Sign() <= 0 {
-			return decimal.Decimal{}, fmt.Errorf("tick size must be positive")
-		}
+	if b.tickSize != 0 {
+		parsed := decimal.NewFromFloat(b.tickSize)
 		override = &parsed
 	}
 
@@ -548,23 +542,8 @@ func (b *OrderBuilder) resolveTickSize(ctx context.Context, tokenID string) (dec
 			}
 			return decimal.Decimal{}, fmt.Errorf("tick size lookup failed: %w", err)
 		}
-		tickStr := resp.MinimumTickSize
-		if tickStr == "" {
-			tickStr = resp.TickSize
-		}
-		if tickStr == "" {
-			if override != nil {
-				return *override, nil
-			}
-			return decimal.Decimal{}, fmt.Errorf("tick size is missing from response")
-		}
-		minTick, err := decimal.NewFromString(tickStr)
-		if err != nil {
-			return decimal.Decimal{}, fmt.Errorf("invalid tick size response: %w", err)
-		}
-		if minTick.Sign() <= 0 {
-			return decimal.Decimal{}, fmt.Errorf("tick size must be positive")
-		}
+		minTick := decimal.NewFromFloat(resp.MinimumTickSize)
+
 		if override != nil {
 			if override.Cmp(minTick) < 0 {
 				return decimal.Decimal{}, fmt.Errorf("tick size %s is smaller than minimum %s", override.String(), minTick.String())

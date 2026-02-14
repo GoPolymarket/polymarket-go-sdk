@@ -115,7 +115,7 @@ type Client interface {
 	// InvalidateCaches clears all internally cached market metadata (tick sizes, fee rates).
 	InvalidateCaches()
 	// SetTickSize manually populates the tick size cache for a token.
-	SetTickSize(tokenID, tickSize string)
+	SetTickSize(tokenID string, tickSize float64)
 	// SetNegRisk manually populates the negative risk cache for a token.
 	SetNegRisk(tokenID string, negRisk bool)
 	// SetFeeRateBps manually populates the fee rate cache for a token.

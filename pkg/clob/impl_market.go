@@ -251,7 +251,7 @@ func (c *clientImpl) TickSize(ctx context.Context, req *clobtypes.TickSizeReques
 	}
 	if req != nil && req.TokenID != "" && c.cache != nil {
 		c.cache.mu.RLock()
-		if cached, ok := c.cache.tickSizes[req.TokenID]; ok && cached != "" {
+		if cached, ok := c.cache.tickSizes[req.TokenID]; ok && cached != 0 {
 			c.cache.mu.RUnlock()
 			return clobtypes.TickSizeResponse{MinimumTickSize: cached}, nil
 		}
@@ -261,10 +261,10 @@ func (c *clientImpl) TickSize(ctx context.Context, req *clobtypes.TickSizeReques
 	err := c.httpClient.Get(ctx, "/tick-size", q, &resp)
 	if err == nil && req != nil && req.TokenID != "" && c.cache != nil {
 		tickSize := resp.MinimumTickSize
-		if tickSize == "" {
+		if tickSize == 0 {
 			tickSize = resp.TickSize
 		}
-		if tickSize != "" {
+		if tickSize != 0 {
 			c.cache.mu.Lock()
 			c.cache.tickSizes[req.TokenID] = tickSize
 			c.cache.mu.Unlock()

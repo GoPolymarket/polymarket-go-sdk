@@ -299,8 +299,8 @@ type (
 	}
 	LastTradesPricesResponse []LastTradePriceResponse
 	TickSizeResponse         struct {
-		MinimumTickSize string `json:"minimum_tick_size,omitempty"`
-		TickSize        string `json:"tick_size,omitempty"`
+		MinimumTickSize float64 `json:"minimum_tick_size,omitempty"`
+		TickSize        float64 `json:"tick_size,omitempty"`
 	}
 	NegRiskResponse struct {
 		NegRisk bool `json:"neg_risk"`
