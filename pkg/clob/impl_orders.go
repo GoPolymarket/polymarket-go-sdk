@@ -108,7 +108,7 @@ func signOrderWithCreds(signer auth.Signer, apiKey *auth.APIKey, order *clobtype
 			{Name: "chainId", Type: "uint256"},
 			{Name: "verifyingContract", Type: "address"},
 		},
-		"clobtypes.Order": {
+		"Order": {
 			{Name: "salt", Type: "uint256"},
 			{Name: "maker", Type: "address"},
 			{Name: "signer", Type: "address"},
@@ -163,7 +163,7 @@ func signOrderWithCreds(signer auth.Signer, apiKey *auth.APIKey, order *clobtype
 		"signatureType": (*math.HexOrDecimal256)(big.NewInt(int64(sigTypeVal))),
 	}
 
-	sig, err := signer.SignTypedData(domain, typesDef, message, "clobtypes.Order")
+	sig, err := signer.SignTypedData(domain, typesDef, message, "Order")
 	if err != nil {
 		return nil, fmt.Errorf("signing failed: %w", err)
 	}
