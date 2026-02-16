@@ -31,7 +31,7 @@ type Client interface {
 	// SubscribeOrderbook subscribes to L2 order book snapshots and updates for specific assets.
 	SubscribeOrderbook(ctx context.Context, assetIDs []string) (<-chan OrderbookEvent, error)
 	// SubscribePrices subscribes to real-time price change events for specific assets.
-	SubscribePrices(ctx context.Context, assetIDs []string) (<-chan PriceEvent, error)
+	SubscribePrices(ctx context.Context, assetIDs []string) (<-chan PriceChangeEvent, error)
 	// SubscribeMidpoints subscribes to mid-price update events for specific assets.
 	SubscribeMidpoints(ctx context.Context, assetIDs []string) (<-chan MidpointEvent, error)
 	// SubscribeLastTradePrices subscribes to the price of the latest executed trades for specific assets.
@@ -59,7 +59,7 @@ type Client interface {
 	// SubscribeOrderbookStream is like SubscribeOrderbook but returns a managed Stream object.
 	SubscribeOrderbookStream(ctx context.Context, assetIDs []string) (*Stream[OrderbookEvent], error)
 	// SubscribePricesStream is like SubscribePrices but returns a managed Stream object.
-	SubscribePricesStream(ctx context.Context, assetIDs []string) (*Stream[PriceEvent], error)
+	SubscribePricesStream(ctx context.Context, assetIDs []string) (*Stream[PriceChangeEvent], error)
 	// SubscribeMidpointsStream is like SubscribeMidpoints but returns a managed Stream object.
 	SubscribeMidpointsStream(ctx context.Context, assetIDs []string) (*Stream[MidpointEvent], error)
 	// SubscribeLastTradePricesStream is like SubscribeLastTradePrices but returns a managed Stream object.

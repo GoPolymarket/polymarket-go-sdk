@@ -40,11 +40,11 @@ type clientImpl struct {
 	closeOnce    sync.Once
 	closing      atomic.Bool
 	// Per-connection context cancellation for goroutine lifecycle management
-	marketCtx       context.Context
-	marketCancel    context.CancelFunc
-	userCtx         context.Context
-	userCancel      context.CancelFunc
-	goroutineCtxMu  sync.Mutex
+	marketCtx      context.Context
+	marketCancel   context.CancelFunc
+	userCtx        context.Context
+	userCancel     context.CancelFunc
+	goroutineCtxMu sync.Mutex
 	// Subscription state
 	debug               bool
 	disablePing         bool
@@ -74,7 +74,7 @@ type clientImpl struct {
 
 	// Stream subscriptions
 	orderbookSubs      map[string]*subscriptionEntry[OrderbookEvent]
-	priceSubs          map[string]*subscriptionEntry[PriceEvent]
+	priceSubs          map[string]*subscriptionEntry[PriceChangeEvent]
 	midpointSubs       map[string]*subscriptionEntry[MidpointEvent]
 	lastTradeSubs      map[string]*subscriptionEntry[LastTradePriceEvent]
 	tickSizeSubs       map[string]*subscriptionEntry[TickSizeChangeEvent]
@@ -167,7 +167,7 @@ func NewClient(url string, signer auth.Signer, apiKey *auth.APIKey) (Client, err
 		marketState:         ConnectionDisconnected,
 		userState:           ConnectionDisconnected,
 		orderbookSubs:       make(map[string]*subscriptionEntry[OrderbookEvent]),
-		priceSubs:           make(map[string]*subscriptionEntry[PriceEvent]),
+		priceSubs:           make(map[string]*subscriptionEntry[PriceChangeEvent]),
 		midpointSubs:        make(map[string]*subscriptionEntry[MidpointEvent]),
 		lastTradeSubs:       make(map[string]*subscriptionEntry[LastTradePriceEvent]),
 		tickSizeSubs:        make(map[string]*subscriptionEntry[TickSizeChangeEvent]),
@@ -664,8 +664,10 @@ func (c *clientImpl) dispatchPrice(event PriceEvent) {
 	subs := snapshotSubs(c.priceSubs)
 	c.subMu.Unlock()
 	for _, sub := range subs {
-		if sub.matchesAsset(event.AssetID) {
-			sub.trySend(event)
+		for _, priceChange := range event.PriceChanges {
+			if sub.matchesAsset(priceChange.AssetId) {
+				sub.trySend(priceChange)
+			}
 		}
 	}
 }
@@ -769,7 +771,7 @@ func (c *clientImpl) SubscribeOrderbookStream(ctx context.Context, assetIDs []st
 	return subscribeMarketStream(c, ctx, assetIDs, Orderbook, false, c.orderbookSubs)
 }
 
-func (c *clientImpl) SubscribePricesStream(ctx context.Context, assetIDs []string) (*Stream[PriceEvent], error) {
+func (c *clientImpl) SubscribePricesStream(ctx context.Context, assetIDs []string) (*Stream[PriceChangeEvent], error) {
 	return subscribeMarketStream(c, ctx, assetIDs, PriceChange, false, c.priceSubs)
 }
 
@@ -821,7 +823,7 @@ func (c *clientImpl) SubscribeOrderbook(ctx context.Context, assetIDs []string) 
 	return stream.C, nil
 }
 
-func (c *clientImpl) SubscribePrices(ctx context.Context, assetIDs []string) (<-chan PriceEvent, error) {
+func (c *clientImpl) SubscribePrices(ctx context.Context, assetIDs []string) (<-chan PriceChangeEvent, error) {
 	stream, err := c.SubscribePricesStream(ctx, assetIDs)
 	if err != nil {
 		return nil, err

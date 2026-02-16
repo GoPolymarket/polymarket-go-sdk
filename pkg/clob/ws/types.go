@@ -133,9 +133,19 @@ type OrderbookEvent struct {
 }
 
 type PriceEvent struct {
-	AssetID string `json:"asset_id"`
+	Market       string             `json:"market"`
+	PriceChanges []PriceChangeEvent `json:"price_changes"`
+	Timestamp    string             `json:"timestamp"`
+}
+
+type PriceChangeEvent struct {
+	AssetId string `json:"asset_id"`
+	BestAsk string `json:"best_ask"`
+	BestBid string `json:"best_bid"`
+	Hash    string `json:"hash"`
 	Price   string `json:"price"`
 	Side    string `json:"side"`
+	Size    string `json:"size"`
 }
 
 type MidpointEvent struct {
