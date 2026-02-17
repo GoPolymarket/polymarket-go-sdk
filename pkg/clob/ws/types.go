@@ -30,8 +30,9 @@ const (
 type Channel string
 
 const (
-	ChannelMarket Channel = "market"
-	ChannelUser   Channel = "user"
+	ChannelMarket    Channel = "market"
+	ChannelUser      Channel = "user"
+	ChannelSubscribe Channel = "subscribe"
 )
 
 // ConnectionState represents CLOB WS connection status.
@@ -90,7 +91,7 @@ func NewMarketUnsubscribe(assetIDs []string) *SubscriptionRequest {
 func NewUserSubscription(markets []string) *SubscriptionRequest {
 	initial := true
 	return &SubscriptionRequest{
-		Type:        ChannelUser,
+		Type:        ChannelSubscribe,
 		Operation:   OperationSubscribe,
 		Markets:     markets,
 		InitialDump: &initial,
@@ -226,14 +227,23 @@ type TradeEvent struct {
 }
 
 type OrderEvent struct {
-	// User specific order updates
-	OrderID   string `json:"order_id"`
-	ClientID  string `json:"client_order_id"`
-	AssetID   string `json:"asset_id"`
-	Side      string `json:"side"`
-	Price     string `json:"price"`
-	Size      string `json:"size"`
-	Filled    string `json:"filled_size"`
-	Status    string `json:"status"` // OPEN, FILLED, CANCELED
-	Timestamp int64  `json:"timestamp"`
+	ID              string   `json:"id"`
+	AssetID         string   `json:"asset_id"`
+	Market          string   `json:"market"`
+	Side            string   `json:"side"`
+	Price           string   `json:"price"`
+	OriginalSize    string   `json:"original_size"`
+	SizeMatched     string   `json:"size_matched"`
+	Status          string   `json:"status"` // LIVE, CANCELED, MATCHED
+	Type            string   `json:"type"`   // PLACEMENT, UPDATE, CANCELLATION
+	Outcome         string   `json:"outcome"`
+	OrderOwner      string   `json:"order_owner"`
+	Owner           string   `json:"owner"`
+	Timestamp       string   `json:"timestamp"` // string
+	CreatedAt       string   `json:"created_at"`
+	Expiration      string   `json:"expiration"`
+	OrderType       string   `json:"order_type"` // GTC, FOK, etc
+	MakerAddress    string   `json:"maker_address"`
+	AssociateTrades []string `json:"associate_trades"`
+	EventType       string   `json:"event_type"`
 }
