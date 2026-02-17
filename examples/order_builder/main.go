@@ -6,7 +6,6 @@ import (
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob"
-	
 )
 
 func main() {
@@ -44,7 +43,7 @@ func main() {
 		Price(0.5).
 		Size(100.0).
 		FeeRateBps(0).
-		TickSize("0.01").
+		TickSize(0.01).
 		UseProxy(). // Important: Use Proxy Wallet
 		Build()
 

@@ -52,7 +52,7 @@ func main() {
 		Side("BUY").
 		Price(0.5).
 		Size(10).
-		TickSize("0.01").
+		TickSize(0.01).
 		FeeRateBps(0).
 		BuildSignableWithContext(ctx)
 	if err != nil {

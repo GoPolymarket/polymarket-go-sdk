@@ -25,7 +25,7 @@ func mustSigner(t *testing.T) auth.Signer {
 
 func TestBuildMarketPriceValidation(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 
 	_, err := NewOrderBuilder(stub, mustSigner(t)).
@@ -42,7 +42,7 @@ func TestBuildMarketPriceValidation(t *testing.T) {
 
 func TestBuildMarketAmountSharesValidation(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 
 	_, err := NewOrderBuilder(stub, mustSigner(t)).
@@ -58,7 +58,7 @@ func TestBuildMarketAmountSharesValidation(t *testing.T) {
 
 func TestBuildMarketAmountUSDCValidation(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 
 	_, err := NewOrderBuilder(stub, mustSigner(t)).
@@ -74,7 +74,7 @@ func TestBuildMarketAmountUSDCValidation(t *testing.T) {
 
 func TestBuildMarketUsesOrderBookDepth(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 	stub.book = clobtypes.OrderBookResponse{
 		Asks: []clobtypes.PriceLevel{
@@ -107,7 +107,7 @@ func TestBuildMarketUsesOrderBookDepth(t *testing.T) {
 
 func TestBuildMarketFOKInsufficientLiquidity(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 	stub.book = clobtypes.OrderBookResponse{
 		Asks: []clobtypes.PriceLevel{
@@ -128,7 +128,7 @@ func TestBuildMarketFOKInsufficientLiquidity(t *testing.T) {
 
 func TestBuildMarketFAKUsesTopPriceWhenInsufficient(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 	stub.book = clobtypes.OrderBookResponse{
 		Asks: []clobtypes.PriceLevel{
@@ -163,7 +163,7 @@ func TestBuildMarketFAKUsesTopPriceWhenInsufficient(t *testing.T) {
 
 func TestBuildLimitOrder(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 10
 
 	ctx := context.Background()
@@ -236,7 +236,7 @@ func TestBuildLimitOrder(t *testing.T) {
 
 func TestOrderBuilderDefaultsFromClient(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 
 	signer := mustSigner(t)
@@ -269,7 +269,7 @@ func TestOrderBuilderDefaultsFromClient(t *testing.T) {
 
 func TestOrderBuilderFunderRequiresSignature(t *testing.T) {
 	stub := newStubClient()
-	stub.tickSize = "0.01"
+	stub.tickSize = 0.01
 	stub.feeRate = 0
 
 	signer := mustSigner(t)

@@ -10,7 +10,7 @@ import (
 type stubClient struct {
 	*clientImpl
 
-	tickSize      string
+	tickSize      float64
 	feeRate       int64
 	book          clobtypes.OrderBookResponse
 	orders        map[string]clobtypes.OrdersResponse

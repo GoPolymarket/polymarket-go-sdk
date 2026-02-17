@@ -71,7 +71,7 @@ func TestMarketMethods(t *testing.T) {
 			"/midpoint?token_id=t1":        `{"midpoint":"0.5"}`,
 			"/price?token_id=t1":           `{"price":"0.51"}`,
 			"/spread?token_id=t1":          `{"spread":"0.01"}`,
-			"/tick-size?token_id=t1":       `{"minimum_tick_size":"0.01"}`,
+			"/tick-size?token_id=t1":       `{"minimum_tick_size":0.01}`,
 			"/neg-risk?token_id=t1":        `{"neg_risk":true}`,
 			"/fee-rate?token_id=t1":        `{"base_fee":10}`,
 			"/prices-history?token_id=t1":  `{"history":[{"t":123,"p":0.5}]}`,
@@ -142,13 +142,13 @@ func TestMarketMethods(t *testing.T) {
 
 	t.Run("TickSize", func(t *testing.T) {
 		resp, err := client.TickSize(ctx, &clobtypes.TickSizeRequest{TokenID: "t1"})
-		if err != nil || resp.MinimumTickSize != "0.01" {
+		if err != nil || resp.MinimumTickSize != 0.01 {
 			t.Errorf("TickSize failed: %v", err)
 		}
 		// Test cache
-		client.SetTickSize("t1", "0.02")
+		client.SetTickSize("t1", 0.02)
 		resp, _ = client.TickSize(ctx, &clobtypes.TickSizeRequest{TokenID: "t1"})
-		if resp.MinimumTickSize != "0.02" {
+		if resp.MinimumTickSize != 0.02 {
 			t.Errorf("cache failed")
 		}
 	})
