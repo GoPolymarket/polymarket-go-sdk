@@ -192,7 +192,9 @@ func (c *clientImpl) connect() error {
 		c.setState(ConnectionDisconnected)
 		return err
 	}
+	c.mu.Lock()
 	c.conn = conn
+	c.mu.Unlock()
 	c.setState(ConnectionConnected)
 	c.connOnce.Do(func() { close(c.connReady) })
 	return nil
@@ -269,8 +271,14 @@ func (c *clientImpl) pingLoop() {
 }
 
 func (c *clientImpl) readLoop() error {
+	c.mu.Lock()
+	conn := c.conn
+	c.mu.Unlock()
+	if conn == nil {
+		return errors.New("connection not established")
+	}
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, message, err := conn.ReadMessage()
 		if err != nil {
 			logger.Error("rtds read error: %v", err)
 			c.setState(ConnectionDisconnected)

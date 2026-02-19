@@ -192,6 +192,9 @@ func (c *clientImpl) PostOrder(ctx context.Context, req *clobtypes.SignedOrder) 
 
 func (c *clientImpl) PostOrders(ctx context.Context, req *clobtypes.SignedOrders) (clobtypes.PostOrdersResponse, error) {
 	var resp clobtypes.PostOrdersResponse
+	if req != nil && len(req.Orders) > clobtypes.MaxPostOrdersBatchSize {
+		return resp, fmt.Errorf("batch size %d exceeds maximum of %d orders", len(req.Orders), clobtypes.MaxPostOrdersBatchSize)
+	}
 	payload, err := buildOrdersPayload(req)
 	if err != nil {
 		return resp, err
@@ -214,6 +217,9 @@ func (c *clientImpl) CancelOrder(ctx context.Context, req *clobtypes.CancelOrder
 
 func (c *clientImpl) CancelOrders(ctx context.Context, req *clobtypes.CancelOrdersRequest) (clobtypes.CancelResponse, error) {
 	var resp clobtypes.CancelResponse
+	if req != nil && len(req.OrderIDs) > clobtypes.MaxCancelOrdersBatchSize {
+		return resp, fmt.Errorf("batch size %d exceeds maximum of %d cancels", len(req.OrderIDs), clobtypes.MaxCancelOrdersBatchSize)
+	}
 	var body interface{}
 	if req != nil {
 		ids := req.OrderIDs

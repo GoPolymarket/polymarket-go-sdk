@@ -30,6 +30,7 @@ const (
 	CodeGeoblocked        ErrorCode = "CLOB-005"
 	CodeInvalidPrice      ErrorCode = "CLOB-006"
 	CodeInvalidSize       ErrorCode = "CLOB-007"
+	CodeBatchSizeExceeded ErrorCode = "CLOB-008"
 
 	// HTTP and Network error codes (NET-xxx)
 	CodeInternalServerError ErrorCode = "NET-001"
@@ -127,6 +128,8 @@ var (
 	ErrInvalidPrice = New(CodeInvalidPrice, "invalid price")
 	// ErrInvalidSize is returned when a size is invalid.
 	ErrInvalidSize = New(CodeInvalidSize, "invalid size")
+	// ErrBatchSizeExceeded is returned when a batch request exceeds the maximum allowed size.
+	ErrBatchSizeExceeded = New(CodeBatchSizeExceeded, "batch size exceeds maximum")
 )
 
 // HTTP and Network errors

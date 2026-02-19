@@ -3,6 +3,7 @@ package clob
 import (
 	"context"
 	"math/big"
+	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -21,7 +22,7 @@ func TestOrderManagementMethods(t *testing.T) {
 
 	t.Run("PostOrder", func(t *testing.T) {
 		doer := &staticDoer{
-			responses: map[string]string{"/order": `{"id":"o1","status":"OK"}`},
+			responses: map[string]string{"/order": `{"orderID":"o1","status":"OK"}`},
 		}
 		client := &clientImpl{
 			httpClient: transport.NewClient(doer, "http://example"),
@@ -109,7 +110,7 @@ func TestOrderManagementMethods(t *testing.T) {
 
 	t.Run("OrderLookup", func(t *testing.T) {
 		doer := &staticDoer{
-			responses: map[string]string{"/data/order/o1": `{"id":"o1","status":"OK"}`},
+			responses: map[string]string{"/data/order/o1": `{"orderID":"o1","status":"OK"}`},
 		}
 		client := &clientImpl{
 			httpClient: transport.NewClient(doer, "http://example"),
@@ -197,5 +198,54 @@ func TestSignOrderDefaults(t *testing.T) {
 	}
 	if signed.Order.Salt.Int == nil || signed.Order.Salt.Int.Int64() != 7 {
 		t.Fatalf("salt mismatch: got %v", signed.Order.Salt.Int)
+	}
+}
+
+func TestPostOrders_BatchSizeValidation(t *testing.T) {
+	ctx := context.Background()
+	client := &clientImpl{
+		httpClient: transport.NewClient(&staticDoer{responses: map[string]string{}}, "http://example"),
+	}
+
+	// Exactly at the limit should not error (would error from server, but not from validation)
+	atLimit := &clobtypes.SignedOrders{
+		Orders: make([]clobtypes.SignedOrder, clobtypes.MaxPostOrdersBatchSize),
+	}
+	// This will fail at the HTTP level but should NOT fail at validation
+	_, err := client.PostOrders(ctx, atLimit)
+	if err != nil && strings.Contains(err.Error(), "batch size") {
+		t.Errorf("expected no batch size error at limit, got: %v", err)
+	}
+
+	// Over the limit should error immediately
+	overLimit := &clobtypes.SignedOrders{
+		Orders: make([]clobtypes.SignedOrder, clobtypes.MaxPostOrdersBatchSize+1),
+	}
+	_, err = client.PostOrders(ctx, overLimit)
+	if err == nil {
+		t.Fatal("expected error for exceeding batch size")
+	}
+	if !strings.Contains(err.Error(), "batch size") {
+		t.Errorf("expected batch size error, got: %v", err)
+	}
+}
+
+func TestCancelOrders_BatchSizeValidation(t *testing.T) {
+	ctx := context.Background()
+	client := &clientImpl{
+		httpClient: transport.NewClient(&staticDoer{responses: map[string]string{}}, "http://example"),
+	}
+
+	// Over the limit should error immediately
+	ids := make([]string, clobtypes.MaxCancelOrdersBatchSize+1)
+	for i := range ids {
+		ids[i] = "order-" + strings.Repeat("x", 5)
+	}
+	_, err := client.CancelOrders(ctx, &clobtypes.CancelOrdersRequest{OrderIDs: ids})
+	if err == nil {
+		t.Fatal("expected error for exceeding cancel batch size")
+	}
+	if !strings.Contains(err.Error(), "batch size") {
+		t.Errorf("expected batch size error, got: %v", err)
 	}
 }

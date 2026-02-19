@@ -808,3 +808,46 @@ func TestSignalDone_Idempotent(t *testing.T) {
 	c.signalDone()
 	c.signalDone() // should not panic
 }
+
+// --------------- connect race fix ---------------
+
+func TestConnect_ConnProtectedByMutex(t *testing.T) {
+	// Verify that connect() assigns c.conn under c.mu so that concurrent
+	// pingLoop reads cannot race on the pointer.
+	s := mockWSServer(t, func(c *websocket.Conn) {
+		for {
+			_, _, err := c.ReadMessage()
+			if err != nil {
+				return
+			}
+		}
+	})
+	defer s.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(s.URL, "http")
+	client, err := NewClient(wsURL)
+	if err != nil {
+		t.Fatalf("NewClient failed: %v", err)
+	}
+	defer client.Close()
+
+	// Give enough time for connect + pingLoop to run concurrently.
+	time.Sleep(200 * time.Millisecond)
+
+	impl := client.(*clientImpl)
+	impl.mu.Lock()
+	hasConn := impl.conn != nil
+	impl.mu.Unlock()
+	if !hasConn {
+		t.Fatal("expected connection to be established")
+	}
+}
+
+func TestReadLoop_NilConn(t *testing.T) {
+	c := newTestClient()
+	// readLoop should return an error when conn is nil
+	err := c.readLoop()
+	if err == nil {
+		t.Fatal("expected error for nil conn")
+	}
+}

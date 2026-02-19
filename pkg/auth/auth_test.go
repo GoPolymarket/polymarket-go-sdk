@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"strings"
 	"testing"
@@ -272,4 +273,15 @@ type mockBuilderDoer struct {
 
 func (m *mockBuilderDoer) Do(req *http.Request) (*http.Response, error) {
 	return m.resp, m.err
+}
+
+func TestClobAuthDomain_HasChainId(t *testing.T) {
+	if ClobAuthDomain.ChainId == nil {
+		t.Fatal("ClobAuthDomain.ChainId should not be nil")
+	}
+	// Cast back to big.Int to verify the value
+	chainID := (*big.Int)(ClobAuthDomain.ChainId)
+	if chainID.Int64() != PolygonChainID {
+		t.Errorf("ClobAuthDomain.ChainId = %d, want %d", chainID.Int64(), PolygonChainID)
+	}
 }

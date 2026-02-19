@@ -318,8 +318,8 @@ func TestNewMarketUnsubscribe(t *testing.T) {
 
 func TestNewUserSubscription(t *testing.T) {
 	req := NewUserSubscription([]string{"m1"})
-	if req.Type != ChannelUser {
-		t.Fatalf("expected user channel, got %s", req.Type)
+	if req.Type != ChannelSubscribe {
+		t.Fatalf("expected subscribe channel, got %s", req.Type)
 	}
 	if req.Operation != OperationSubscribe {
 		t.Fatalf("expected subscribe, got %s", req.Operation)
@@ -391,7 +391,7 @@ func newTestClient() *clientImpl {
 		marketState:        ConnectionDisconnected,
 		userState:          ConnectionDisconnected,
 		orderbookSubs:      make(map[string]*subscriptionEntry[OrderbookEvent]),
-		priceSubs:          make(map[string]*subscriptionEntry[PriceEvent]),
+		priceSubs:          make(map[string]*subscriptionEntry[PriceChangeEvent]),
 		midpointSubs:       make(map[string]*subscriptionEntry[MidpointEvent]),
 		lastTradeSubs:      make(map[string]*subscriptionEntry[LastTradePriceEvent]),
 		tickSizeSubs:       make(map[string]*subscriptionEntry[TickSizeChangeEvent]),
@@ -418,12 +418,18 @@ func newTestClient() *clientImpl {
 
 func TestProcessEvent_Price(t *testing.T) {
 	c := newTestClient()
-	ch := make(chan PriceEvent, 5)
-	c.priceSubs["p1"] = &subscriptionEntry[PriceEvent]{
+	ch := make(chan PriceChangeEvent, 5)
+	c.priceSubs["p1"] = &subscriptionEntry[PriceChangeEvent]{
 		id: "p1", ch: ch, errCh: make(chan error, 5),
 	}
 
-	raw := map[string]interface{}{"event_type": "price", "asset_id": "tok1", "price": "0.55"}
+	raw := map[string]interface{}{
+		"event_type": "price",
+		"market":     "m1",
+		"price_changes": []interface{}{
+			map[string]interface{}{"asset_id": "tok1", "price": "0.55"},
+		},
+	}
 	c.processEvent(raw)
 
 	select {
@@ -438,12 +444,18 @@ func TestProcessEvent_Price(t *testing.T) {
 
 func TestProcessEvent_PriceChange(t *testing.T) {
 	c := newTestClient()
-	ch := make(chan PriceEvent, 5)
-	c.priceSubs["p1"] = &subscriptionEntry[PriceEvent]{
+	ch := make(chan PriceChangeEvent, 5)
+	c.priceSubs["p1"] = &subscriptionEntry[PriceChangeEvent]{
 		id: "p1", ch: ch, errCh: make(chan error, 5),
 	}
 
-	raw := map[string]interface{}{"event_type": "price_change", "asset_id": "tok2", "price": "0.60"}
+	raw := map[string]interface{}{
+		"event_type": "price_change",
+		"market":     "m1",
+		"price_changes": []interface{}{
+			map[string]interface{}{"asset_id": "tok2", "price": "0.60"},
+		},
+	}
 	c.processEvent(raw)
 
 	select {
@@ -1035,4 +1047,118 @@ func TestConcurrentClose(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+// --------------- Deadlock regression test ---------------
+
+func TestTrySend_FullChannel_NoDeadlock(t *testing.T) {
+	// Regression test for reentrant RLock deadlock in trySend -> notifyLag.
+	// trySend holds RLock and calls notifyLagLocked (no lock) instead of
+	// notifyLag (which would re-acquire RLock and potentially deadlock).
+	sub := &subscriptionEntry[int]{
+		id:      "deadlock-test",
+		channel: ChannelMarket,
+		event:   Price,
+		ch:      make(chan int, 1), // small buffer to trigger full path
+		errCh:   make(chan error, 5),
+	}
+
+	// Fill the channel
+	sub.ch <- 42
+
+	// This should complete without deadlock
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.trySend(99) // channel full → notifyLagLocked path
+	}()
+
+	select {
+	case <-done:
+		// Success - no deadlock
+	case <-time.After(2 * time.Second):
+		t.Fatal("trySend deadlocked on full channel")
+	}
+
+	// Verify lag error was sent
+	select {
+	case err := <-sub.errCh:
+		if _, ok := err.(LaggedError); !ok {
+			t.Fatalf("expected LaggedError, got %T", err)
+		}
+	default:
+		t.Fatal("expected lag notification")
+	}
+}
+
+func TestTrySend_ConcurrentCloseAndFullChannel(t *testing.T) {
+	// Test concurrent close while trySend hits full channel path.
+	// This would deadlock with the old reentrant RLock implementation.
+	sub := &subscriptionEntry[int]{
+		id:      "concurrent-test",
+		channel: ChannelMarket,
+		event:   Price,
+		ch:      make(chan int, 1),
+		errCh:   make(chan error, 5),
+	}
+
+	sub.ch <- 1 // fill
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sub.trySend(99)
+		}()
+	}
+	// Close concurrently
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(5 * time.Millisecond)
+		sub.close()
+	}()
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// OK
+	case <-time.After(5 * time.Second):
+		t.Fatal("deadlock detected in concurrent trySend + close")
+	}
+}
+
+// --------------- PriceChangeEvent.AssetID naming ---------------
+
+func TestPriceChangeEvent_AssetID_JSONRoundtrip(t *testing.T) {
+	original := PriceChangeEvent{
+		AssetID: "0x123abc",
+		Price:   "0.55",
+		BestBid: "0.54",
+		BestAsk: "0.56",
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	// Verify JSON uses snake_case
+	if !strings.Contains(string(data), `"asset_id"`) {
+		t.Fatalf("expected asset_id in JSON, got %s", data)
+	}
+
+	var decoded PriceChangeEvent
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.AssetID != original.AssetID {
+		t.Fatalf("expected %s, got %s", original.AssetID, decoded.AssetID)
+	}
 }

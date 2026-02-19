@@ -140,7 +140,7 @@ type PriceEvent struct {
 }
 
 type PriceChangeEvent struct {
-	AssetId string `json:"asset_id"`
+	AssetID string `json:"asset_id"`
 	BestAsk string `json:"best_ask"`
 	BestBid string `json:"best_bid"`
 	Hash    string `json:"hash"`

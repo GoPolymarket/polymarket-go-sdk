@@ -622,3 +622,89 @@ func TestAPIKeyResponse_JSON(t *testing.T) {
 		t.Errorf("Passphrase = %s, want %s", decoded.Passphrase, resp.Passphrase)
 	}
 }
+
+func TestOrderResponse_ExpandedFields(t *testing.T) {
+	raw := `{
+		"orderID": "order-123",
+		"status": "LIVE",
+		"asset_id": "0xabc",
+		"market": "0xdef",
+		"side": "BUY",
+		"price": "0.55",
+		"original_size": "100",
+		"size_matched": "50",
+		"owner": "0x111",
+		"maker_address": "0x222",
+		"order_type": "GTC",
+		"expiration": "0",
+		"created_at": "2024-01-01T00:00:00Z",
+		"timestamp": "1700000000",
+		"outcome": "Yes"
+	}`
+
+	var resp OrderResponse
+	if err := json.Unmarshal([]byte(raw), &resp); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if resp.ID != "order-123" {
+		t.Errorf("ID = %s, want order-123", resp.ID)
+	}
+	if resp.AssetID != "0xabc" {
+		t.Errorf("AssetID = %s, want 0xabc", resp.AssetID)
+	}
+	if resp.Market != "0xdef" {
+		t.Errorf("Market = %s, want 0xdef", resp.Market)
+	}
+	if resp.Side != "BUY" {
+		t.Errorf("Side = %s, want BUY", resp.Side)
+	}
+	if resp.Price != "0.55" {
+		t.Errorf("Price = %s, want 0.55", resp.Price)
+	}
+	if resp.OriginalSize != "100" {
+		t.Errorf("OriginalSize = %s, want 100", resp.OriginalSize)
+	}
+	if resp.SizeMatched != "50" {
+		t.Errorf("SizeMatched = %s, want 50", resp.SizeMatched)
+	}
+	if resp.OrderType != "GTC" {
+		t.Errorf("OrderType = %s, want GTC", resp.OrderType)
+	}
+}
+
+func TestTrade_ExpandedFields(t *testing.T) {
+	raw := `{
+		"id": "trade-123",
+		"price": "0.60",
+		"size": "25",
+		"side": "SELL",
+		"timestamp": 1700000000,
+		"market": "0xcondition",
+		"asset_id": "0xtoken",
+		"status": "CONFIRMED",
+		"taker_order_id": "taker-1",
+		"maker_order_id": "maker-1",
+		"fee_rate_bps": "100",
+		"transaction_hash": "0xtxhash"
+	}`
+
+	var trade Trade
+	if err := json.Unmarshal([]byte(raw), &trade); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if trade.Market != "0xcondition" {
+		t.Errorf("Market = %s, want 0xcondition", trade.Market)
+	}
+	if trade.AssetID != "0xtoken" {
+		t.Errorf("AssetID = %s, want 0xtoken", trade.AssetID)
+	}
+	if trade.Status != "CONFIRMED" {
+		t.Errorf("Status = %s, want CONFIRMED", trade.Status)
+	}
+	if trade.TransactionHash != "0xtxhash" {
+		t.Errorf("TransactionHash = %s, want 0xtxhash", trade.TransactionHash)
+	}
+	if trade.FeeRateBps != "100" {
+		t.Errorf("FeeRateBps = %s, want 100", trade.FeeRateBps)
+	}
+}

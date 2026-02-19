@@ -62,7 +62,19 @@ func (s *subscriptionEntry[T]) trySend(msg T) {
 	case s.ch <- msg:
 		return
 	default:
-		s.notifyLag(1)
+		s.notifyLagLocked(1)
+	}
+}
+
+// notifyLagLocked sends a lag notification without acquiring the lock.
+// Caller must hold at least s.mu.RLock().
+func (s *subscriptionEntry[T]) notifyLagLocked(count int) {
+	if count <= 0 || s.closed {
+		return
+	}
+	select {
+	case s.errCh <- LaggedError{Count: count, Channel: s.channel, EventType: s.event}:
+	default:
 	}
 }
 

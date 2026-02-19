@@ -199,7 +199,7 @@ func TestSubscriptionPanic_DispatchToClosedSubscription(t *testing.T) {
 
 		// Send some events
 		for i := 0; i < 10; i++ {
-			_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"event_type":"price","asset_id":"test","price":"0.5"}`))
+			_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"event_type":"price","market":"m1","price_changes":[{"asset_id":"test","price":"0.5"}]}`))
 			time.Sleep(10 * time.Millisecond)
 		}
 	}))
@@ -241,11 +241,11 @@ func TestSubscriptionPanic_ConcurrentDispatchAndClose(t *testing.T) {
 
 	// Create multiple subscriptions
 	for i := 0; i < 10; i++ {
-		entry := &subscriptionEntry[PriceEvent]{
+		entry := &subscriptionEntry[PriceChangeEvent]{
 			id:      string(rune(i)),
 			channel: ChannelMarket,
 			event:   Price,
-			ch:      make(chan PriceEvent, 10),
+			ch:      make(chan PriceChangeEvent, 10),
 			errCh:   make(chan error, 5),
 		}
 		c.priceSubs[entry.id] = entry
@@ -266,7 +266,7 @@ func TestSubscriptionPanic_ConcurrentDispatchAndClose(t *testing.T) {
 			}()
 
 			for j := 0; j < 100; j++ {
-				event := PriceEvent{AssetID: "test", Price: "0.5"}
+				event := PriceEvent{Market: "m1", PriceChanges: []PriceChangeEvent{{AssetID: "test", Price: "0.5"}}}
 				c.dispatchPrice(event)
 				time.Sleep(1 * time.Millisecond)
 			}

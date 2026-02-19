@@ -3,6 +3,7 @@ package gamma
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -186,4 +187,76 @@ func TestGammaMethods(t *testing.T) {
 		_, _ = client.GetEvents(ctx, nil)
 		_, _ = client.GetEvent(ctx, "1")
 	})
+}
+
+func TestMarket_NegRiskFields(t *testing.T) {
+	raw := `{
+		"id": "m1",
+		"question": "Will X happen?",
+		"conditionId": "0xcond",
+		"negRisk": true,
+		"negRiskMarketId": "0xneg",
+		"enableOrderBook": true,
+		"questionId": "0xq",
+		"volume24hr": "1000000",
+		"spread": "0.02",
+		"bestBid": "0.48",
+		"bestAsk": "0.52",
+		"lastTradePrice": "0.50",
+		"commentCount": 42,
+		"cyom": false
+	}`
+
+	var m Market
+	if err := json.Unmarshal([]byte(raw), &m); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if !m.NegRisk {
+		t.Error("expected NegRisk=true")
+	}
+	if m.NegRiskMarketID != "0xneg" {
+		t.Errorf("NegRiskMarketID = %s, want 0xneg", m.NegRiskMarketID)
+	}
+	if !m.EnableOrderBook {
+		t.Error("expected EnableOrderBook=true")
+	}
+	if m.Volume24hr != "1000000" {
+		t.Errorf("Volume24hr = %s, want 1000000", m.Volume24hr)
+	}
+	if m.BestBid != "0.48" {
+		t.Errorf("BestBid = %s, want 0.48", m.BestBid)
+	}
+	if m.CommentCount != 42 {
+		t.Errorf("CommentCount = %d, want 42", m.CommentCount)
+	}
+}
+
+func TestEvent_NegRiskFields(t *testing.T) {
+	raw := `{
+		"id": "e1",
+		"title": "Election 2024",
+		"negRisk": true,
+		"enableNegRisk": true,
+		"negRiskAugmented": false,
+		"commentCount": 100,
+		"competitionState": "active",
+		"cyom": true
+	}`
+
+	var e Event
+	if err := json.Unmarshal([]byte(raw), &e); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if !e.NegRisk {
+		t.Error("expected NegRisk=true")
+	}
+	if !e.EnableNegRisk {
+		t.Error("expected EnableNegRisk=true")
+	}
+	if e.CommentCount != 100 {
+		t.Errorf("CommentCount = %d, want 100", e.CommentCount)
+	}
+	if e.CompetitionState != "active" {
+		t.Errorf("CompetitionState = %s, want active", e.CompetitionState)
+	}
 }

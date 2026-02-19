@@ -33,11 +33,13 @@ func TestClientConnection(t *testing.T) {
 		// Wait for subscription request
 		_, _, _ = c.ReadMessage()
 
-		// Send a dummy event
-		err := c.WriteJSON(map[string]string{
+		// Send a dummy event with proper price_changes structure
+		err := c.WriteJSON(map[string]interface{}{
 			"event_type": "price",
-			"asset_id":   "123",
-			"price":      "0.5",
+			"market":     "m1",
+			"price_changes": []map[string]string{
+				{"asset_id": "123", "price": "0.5"},
+			},
 		})
 		if err != nil {
 			return

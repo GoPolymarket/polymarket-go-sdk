@@ -30,6 +30,7 @@ import (
 var ClobAuthDomain = &apitypes.TypedDataDomain{
 	Name:    "ClobAuthDomain",
 	Version: "1",
+	ChainId: (*math.HexOrDecimal256)(big.NewInt(PolygonChainID)),
 }
 
 // ClobAuthTypes defines the EIP-712 type schemas for CLOB authentication.

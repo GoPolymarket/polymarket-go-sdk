@@ -640,6 +640,9 @@ func trySendGlobal[T any](ch chan T, msg T) {
 	if ch == nil {
 		return
 	}
+	defer func() {
+		recover() // safe guard against send on closed channel during shutdown
+	}()
 	select {
 	case ch <- msg:
 	default:
@@ -647,6 +650,9 @@ func trySendGlobal[T any](ch chan T, msg T) {
 }
 
 func (c *clientImpl) dispatchOrderbook(event OrderbookEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.orderbookCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.orderbookSubs)
@@ -659,13 +665,16 @@ func (c *clientImpl) dispatchOrderbook(event OrderbookEvent) {
 }
 
 func (c *clientImpl) dispatchPrice(event PriceEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.priceCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.priceSubs)
 	c.subMu.Unlock()
 	for _, sub := range subs {
 		for _, priceChange := range event.PriceChanges {
-			if sub.matchesAsset(priceChange.AssetId) {
+			if sub.matchesAsset(priceChange.AssetID) {
 				sub.trySend(priceChange)
 			}
 		}
@@ -673,6 +682,9 @@ func (c *clientImpl) dispatchPrice(event PriceEvent) {
 }
 
 func (c *clientImpl) dispatchMidpoint(event MidpointEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.midpointCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.midpointSubs)
@@ -685,6 +697,9 @@ func (c *clientImpl) dispatchMidpoint(event MidpointEvent) {
 }
 
 func (c *clientImpl) dispatchLastTrade(event LastTradePriceEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.lastTradeCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.lastTradeSubs)
@@ -697,6 +712,9 @@ func (c *clientImpl) dispatchLastTrade(event LastTradePriceEvent) {
 }
 
 func (c *clientImpl) dispatchTickSize(event TickSizeChangeEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.tickSizeCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.tickSizeSubs)
@@ -709,6 +727,9 @@ func (c *clientImpl) dispatchTickSize(event TickSizeChangeEvent) {
 }
 
 func (c *clientImpl) dispatchBestBidAsk(event BestBidAskEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.bestBidAskCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.bestBidAskSubs)
@@ -721,6 +742,9 @@ func (c *clientImpl) dispatchBestBidAsk(event BestBidAskEvent) {
 }
 
 func (c *clientImpl) dispatchNewMarket(event NewMarketEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.newMarketCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.newMarketSubs)
@@ -733,6 +757,9 @@ func (c *clientImpl) dispatchNewMarket(event NewMarketEvent) {
 }
 
 func (c *clientImpl) dispatchMarketResolved(event MarketResolvedEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.marketResolvedCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.marketResolvedSubs)
@@ -745,6 +772,9 @@ func (c *clientImpl) dispatchMarketResolved(event MarketResolvedEvent) {
 }
 
 func (c *clientImpl) dispatchTrade(event TradeEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.tradeCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.tradeSubs)
@@ -758,6 +788,9 @@ func (c *clientImpl) dispatchTrade(event TradeEvent) {
 }
 
 func (c *clientImpl) dispatchOrder(event OrderEvent) {
+	if c.closing.Load() {
+		return
+	}
 	trySendGlobal(c.orderCh, event)
 	c.subMu.Lock()
 	subs := snapshotSubs(c.orderSubs)

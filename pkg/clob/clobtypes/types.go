@@ -32,6 +32,11 @@ const (
 const (
 	InitialCursor = "MA=="
 	EndCursor     = "LTE="
+
+	// MaxPostOrdersBatchSize is the maximum number of orders allowed in a single PostOrders request.
+	MaxPostOrdersBatchSize = 15
+	// MaxCancelOrdersBatchSize is the maximum number of order IDs allowed in a single CancelOrders request.
+	MaxCancelOrdersBatchSize = 3000
 )
 
 // Request types.
@@ -317,8 +322,21 @@ type (
 	}
 	PricesHistoryResponse []PriceHistoryPoint
 	OrderResponse         struct {
-		ID     string `json:"orderID"`
-		Status string `json:"status"`
+		ID            string `json:"orderID"`
+		Status        string `json:"status"`
+		AssetID       string `json:"asset_id,omitempty"`
+		Market        string `json:"market,omitempty"`
+		Side          string `json:"side,omitempty"`
+		Price         string `json:"price,omitempty"`
+		OriginalSize  string `json:"original_size,omitempty"`
+		SizeMatched   string `json:"size_matched,omitempty"`
+		Owner         string `json:"owner,omitempty"`
+		MakerAddress  string `json:"maker_address,omitempty"`
+		OrderType     string `json:"order_type,omitempty"`
+		Expiration    string `json:"expiration,omitempty"`
+		CreatedAt     string `json:"created_at,omitempty"`
+		Timestamp     string `json:"timestamp,omitempty"`
+		Outcome       string `json:"outcome,omitempty"`
 	}
 	PostOrdersResponse []OrderResponse
 	OrdersResponse     struct {
@@ -459,11 +477,21 @@ type (
 	}
 
 	Trade struct {
-		ID        string `json:"id"`
-		Price     string `json:"price"`
-		Size      string `json:"size"`
-		Side      string `json:"side"`
-		Timestamp int64  `json:"timestamp"`
+		ID              string `json:"id"`
+		Price           string `json:"price"`
+		Size            string `json:"size"`
+		Side            string `json:"side"`
+		Timestamp       int64  `json:"timestamp"`
+		Market          string `json:"market,omitempty"`
+		AssetID         string `json:"asset_id,omitempty"`
+		Status          string `json:"status,omitempty"`
+		TakerOrderID    string `json:"taker_order_id,omitempty"`
+		MakerOrderID    string `json:"maker_order_id,omitempty"`
+		Owner           string `json:"owner,omitempty"`
+		MakerAddress    string `json:"maker_address,omitempty"`
+		MatchTime       string `json:"match_time,omitempty"`
+		FeeRateBps      string `json:"fee_rate_bps,omitempty"`
+		TransactionHash string `json:"transaction_hash,omitempty"`
 	}
 
 	Notification struct {

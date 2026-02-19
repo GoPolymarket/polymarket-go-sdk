@@ -217,10 +217,22 @@ type Market struct {
 	MarketMakerAddress string  `json:"marketMakerAddress"`
 	Tags               []Tag   `json:"tags"`
 	Tokens             []Token `json:"tokens"`
-	ClobTokenIds       string  `json:"clobTokenIds"`     // JSON string of token IDs
-	Outcomes           string  `json:"outcomes"`          // JSON string of outcome labels
-	OutcomePrices      string  `json:"outcomePrices"`     // JSON string of outcome prices
+	ClobTokenIds       string  `json:"clobTokenIds"`
+	Outcomes           string  `json:"outcomes"`
+	OutcomePrices      string  `json:"outcomePrices"`
 	Rewards            Rewards `json:"rewards"`
+	NegRisk            bool    `json:"negRisk"`
+	NegRiskMarketID    string  `json:"negRiskMarketId,omitempty"`
+	NegRiskRequestID   string  `json:"negRiskRequestId,omitempty"`
+	EnableOrderBook    bool    `json:"enableOrderBook,omitempty"`
+	QuestionID         string  `json:"questionId,omitempty"`
+	Volume24hr         string  `json:"volume24hr,omitempty"`
+	Spread             string  `json:"spread,omitempty"`
+	BestBid            string  `json:"bestBid,omitempty"`
+	BestAsk            string  `json:"bestAsk,omitempty"`
+	LastTradePrice     string  `json:"lastTradePrice,omitempty"`
+	CommentCount       int     `json:"commentCount,omitempty"`
+	Cyom               bool    `json:"cyom,omitempty"`
 }
 
 // ParsedTokens builds a Token slice by combining ClobTokenIds and Outcomes.
@@ -265,25 +277,31 @@ type Rewards struct {
 }
 
 type Event struct {
-	ID           string   `json:"id"`
-	Ticker       string   `json:"ticker"`
-	Slug         string   `json:"slug"`
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	StartDate    string   `json:"startDate"`
-	CreationDate string   `json:"creationDate"`
-	EndDate      string   `json:"endDate"`
-	Image        string   `json:"image"`
-	Icon         string   `json:"icon"`
-	Active       bool     `json:"active"`
-	Closed       bool     `json:"closed"`
-	Archived     bool     `json:"archived"`
-	New          bool     `json:"new"`
-	Featured     bool     `json:"featured"`
-	Restricted   bool     `json:"restricted"`
-	Liquidity    string   `json:"liquidity"`
-	Volume       string   `json:"volume"`
-	Markets      []Market `json:"markets"`
+	ID               string   `json:"id"`
+	Ticker           string   `json:"ticker"`
+	Slug             string   `json:"slug"`
+	Title            string   `json:"title"`
+	Description      string   `json:"description"`
+	StartDate        string   `json:"startDate"`
+	CreationDate     string   `json:"creationDate"`
+	EndDate          string   `json:"endDate"`
+	Image            string   `json:"image"`
+	Icon             string   `json:"icon"`
+	Active           bool     `json:"active"`
+	Closed           bool     `json:"closed"`
+	Archived         bool     `json:"archived"`
+	New              bool     `json:"new"`
+	Featured         bool     `json:"featured"`
+	Restricted       bool     `json:"restricted"`
+	Liquidity        string   `json:"liquidity"`
+	Volume           string   `json:"volume"`
+	Markets          []Market `json:"markets"`
+	NegRisk          bool     `json:"negRisk,omitempty"`
+	EnableNegRisk    bool     `json:"enableNegRisk,omitempty"`
+	NegRiskAugmented bool     `json:"negRiskAugmented,omitempty"`
+	CommentCount     int      `json:"commentCount,omitempty"`
+	CompetitionState string   `json:"competitionState,omitempty"`
+	Cyom             bool     `json:"cyom,omitempty"`
 }
 
 type Team struct {
