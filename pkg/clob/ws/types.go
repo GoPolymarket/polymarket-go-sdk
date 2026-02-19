@@ -220,7 +220,7 @@ type TradeEvent struct {
 	Price     string `json:"price"`
 	Size      string `json:"size"`
 	Side      string `json:"side"`
-	Timestamp int64  `json:"timestamp"`
+	Timestamp string `json:"timestamp"`
 	ID        string `json:"id,omitempty"`
 	Market    string `json:"market,omitempty"`
 	Status    string `json:"status,omitempty"`
