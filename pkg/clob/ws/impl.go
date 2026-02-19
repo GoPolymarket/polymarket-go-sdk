@@ -641,7 +641,7 @@ func trySendGlobal[T any](ch chan T, msg T) {
 		return
 	}
 	defer func() {
-		recover() // safe guard against send on closed channel during shutdown
+		_ = recover() // safe guard against send on closed channel during shutdown
 	}()
 	select {
 	case ch <- msg:
