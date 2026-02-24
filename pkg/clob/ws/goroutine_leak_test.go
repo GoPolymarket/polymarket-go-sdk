@@ -32,6 +32,10 @@ func TestWebSocketGoroutineLeaks_Reconnection(t *testing.T) {
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
+	t.Setenv("CLOB_WS_RECONNECT_DELAY_MS", "10")
+	t.Setenv("CLOB_WS_RECONNECT_MAX_DELAY_MS", "50")
+	t.Setenv("CLOB_WS_RECONNECT_MAX", "2")
+
 	client, err := NewClient(wsURL, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
@@ -39,9 +43,6 @@ func TestWebSocketGoroutineLeaks_Reconnection(t *testing.T) {
 
 	// Set short timeouts to speed up test
 	impl := client.(*clientImpl)
-	impl.reconnectDelay = 10 * time.Millisecond
-	impl.reconnectMaxDelay = 50 * time.Millisecond
-	impl.reconnectMax = 2
 	impl.setReadTimeout(100 * time.Millisecond)
 
 	// Wait for reconnection attempts
@@ -80,15 +81,16 @@ func TestWebSocketGoroutineLeaks_MultipleReconnections(t *testing.T) {
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
+	t.Setenv("CLOB_WS_RECONNECT_DELAY_MS", "10")
+	t.Setenv("CLOB_WS_RECONNECT_MAX_DELAY_MS", "50")
+	t.Setenv("CLOB_WS_RECONNECT_MAX", "5")
+
 	client, err := NewClient(wsURL, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
 	impl := client.(*clientImpl)
-	impl.reconnectDelay = 10 * time.Millisecond
-	impl.reconnectMaxDelay = 50 * time.Millisecond
-	impl.reconnectMax = 5
 	impl.setReadTimeout(50 * time.Millisecond)
 
 	// Wait for multiple reconnection cycles
