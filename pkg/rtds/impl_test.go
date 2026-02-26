@@ -69,6 +69,14 @@ func TestRtdsMessageUnmarshal(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 }
+
+func TestNewClientWithConfigRejectsInvalidURL(t *testing.T) {
+	_, err := NewClientWithConfig("://invalid-rtds-url", DefaultClientConfig())
+	if err == nil {
+		t.Fatalf("expected invalid URL error")
+	}
+}
+
 // --------------- newTestClient helper ---------------
 
 func newTestClient() *clientImpl {

@@ -50,23 +50,47 @@ func TestClientInitializationAndOptions(t *testing.T) {
 	t.Run("WithAuth", func(t *testing.T) {
 		signer, _ := auth.NewPrivateKeySigner("0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318", 137)
 		apiKey := &auth.APIKey{Key: "k"}
+		orig := client.(*clientImpl)
 		newClient := client.WithAuth(signer, apiKey)
+		next := newClient.(*clientImpl)
 		if newClient == nil {
 			t.Errorf("WithAuth failed")
+		}
+		if orig == next {
+			t.Errorf("WithAuth should return a new client instance")
+		}
+		if orig.httpClient == next.httpClient {
+			t.Errorf("WithAuth should not reuse mutable transport client")
+		}
+		if orig.signer != nil || orig.apiKey != nil {
+			t.Errorf("WithAuth should not mutate original client auth state")
 		}
 	})
 
 	t.Run("WithBuilderConfig", func(t *testing.T) {
+		orig := client.(*clientImpl)
 		newClient := client.WithBuilderConfig(&auth.BuilderConfig{})
+		next := newClient.(*clientImpl)
 		if newClient == nil {
 			t.Errorf("WithBuilderConfig failed")
+		}
+		if orig.httpClient == next.httpClient {
+			t.Errorf("WithBuilderConfig should not reuse mutable transport client")
 		}
 	})
 
 	t.Run("WithUseServerTime", func(t *testing.T) {
+		orig := client.(*clientImpl)
 		newClient := client.WithUseServerTime(true)
+		next := newClient.(*clientImpl)
 		if newClient == nil {
 			t.Errorf("WithUseServerTime failed")
+		}
+		if orig == next {
+			t.Errorf("WithUseServerTime should return a new client instance")
+		}
+		if orig.httpClient == next.httpClient {
+			t.Errorf("WithUseServerTime should not reuse mutable transport client")
 		}
 	})
 

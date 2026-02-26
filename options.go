@@ -39,6 +39,20 @@ func WithUseServerTime(use bool) Option {
 	}
 }
 
+// WithCLOBWSConfig sets explicit WebSocket runtime behavior for the CLOB WS client.
+func WithCLOBWSConfig(cfg ws.ClientConfig) Option {
+	return func(c *Client) {
+		c.Config.CLOBWSConfig = cfg
+	}
+}
+
+// WithRTDSConfig sets explicit runtime behavior for the RTDS WebSocket client.
+func WithRTDSConfig(cfg rtds.ClientConfig) Option {
+	return func(c *Client) {
+		c.Config.RTDSConfig = cfg
+	}
+}
+
 func WithCLOB(client clob.Client) Option {
 	return func(c *Client) {
 		c.CLOB = client
@@ -78,6 +92,16 @@ func WithRTDS(client rtds.Client) Option {
 func WithCTF(client ctf.Client) Option {
 	return func(c *Client) {
 		c.CTF = client
+	}
+}
+
+// WithBuilderConfig configures builder attribution using either local or remote signing.
+func WithBuilderConfig(cfg *auth.BuilderConfig) Option {
+	return func(c *Client) {
+		c.builderCfg = cfg
+		if c.CLOB != nil {
+			c.CLOB = c.CLOB.WithBuilderConfig(cfg)
+		}
 	}
 }
 

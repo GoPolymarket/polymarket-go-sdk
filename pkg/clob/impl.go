@@ -52,6 +52,30 @@ type orderDefaults struct {
 	saltGenerator SaltGenerator
 }
 
+func (c *clientImpl) cloneWithTransport(httpClient *transport.Client) *clientImpl {
+	newC := &clientImpl{
+		httpClient:        httpClient,
+		signer:            c.signer,
+		apiKey:            c.apiKey,
+		builderCfg:        c.builderCfg,
+		signatureType:     c.signatureType,
+		authNonce:         c.authNonce,
+		funder:            c.funder,
+		saltGenerator:     c.saltGenerator,
+		cache:             c.cache,
+		geoblockHost:      c.geoblockHost,
+		geoblockClient:    nil,
+		rfq:               rfq.NewClient(httpClient),
+		ws:                c.ws,
+		heartbeat:         heartbeat.NewClient(httpClient),
+		heartbeatInterval: c.heartbeatInterval,
+	}
+	if httpClient != nil {
+		newC.geoblockClient = httpClient.CloneWithBaseURL(newC.geoblockHost)
+	}
+	return newC
+}
+
 func newClientCache() *clientCache {
 	return &clientCache{
 		tickSizes: make(map[string]float64),
@@ -108,55 +132,28 @@ func (c *clientImpl) Heartbeat() heartbeat.Client {
 
 // WithAuth returns a new Client with the provided signer and API credentials.
 func (c *clientImpl) WithAuth(signer auth.Signer, apiKey *auth.APIKey) Client {
-	if c.httpClient != nil {
-		c.httpClient.SetAuth(signer, apiKey)
+	newHTTPClient := c.httpClient
+	if newHTTPClient != nil {
+		newHTTPClient = newHTTPClient.Clone()
+		newHTTPClient.SetAuth(signer, apiKey)
 	}
-	newC := &clientImpl{
-		httpClient:        c.httpClient,
-		signer:            signer,
-		apiKey:            apiKey,
-		builderCfg:        c.builderCfg,
-		signatureType:     c.signatureType,
-		authNonce:         c.authNonce,
-		funder:            c.funder,
-		saltGenerator:     c.saltGenerator,
-		cache:             c.cache,
-		geoblockHost:      c.geoblockHost,
-		geoblockClient:    c.geoblockClient,
-		rfq:               c.rfq,
-		ws:                c.ws,
-		heartbeat:         c.heartbeat,
-		heartbeatInterval: c.heartbeatInterval,
-	}
+	newC := c.cloneWithTransport(newHTTPClient)
+	newC.signer = signer
+	newC.apiKey = apiKey
 	newC.startHeartbeats()
 	return newC
 }
 
 // WithBuilderConfig sets the builder attribution config.
 func (c *clientImpl) WithBuilderConfig(config *auth.BuilderConfig) Client {
-	// If config is nil, we might want to disable it or revert to default.
-	// For now, let's assume the user knows what they are doing.
-	// We also need to update the underlying transport's builder config.
-	if c.httpClient != nil {
-		c.httpClient.SetBuilderConfig(config)
+	newHTTPClient := c.httpClient
+	if newHTTPClient != nil {
+		newHTTPClient = newHTTPClient.Clone()
+		newHTTPClient.SetBuilderConfig(config)
 	}
-	return &clientImpl{
-		httpClient:        c.httpClient,
-		signer:            c.signer,
-		apiKey:            c.apiKey,
-		builderCfg:        config,
-		signatureType:     c.signatureType,
-		authNonce:         c.authNonce,
-		funder:            c.funder,
-		saltGenerator:     c.saltGenerator,
-		cache:             c.cache,
-		geoblockHost:      c.geoblockHost,
-		geoblockClient:    c.geoblockClient,
-		rfq:               c.rfq,
-		ws:                c.ws,
-		heartbeat:         c.heartbeat,
-		heartbeatInterval: c.heartbeatInterval,
-	}
+	newC := c.cloneWithTransport(newHTTPClient)
+	newC.builderCfg = config
+	return newC
 }
 
 // PromoteToBuilder switches the client into builder attribution mode.
@@ -166,26 +163,13 @@ func (c *clientImpl) PromoteToBuilder(config *auth.BuilderConfig) Client {
 	}
 	// Stop heartbeats on the old instance before switching.
 	c.StopHeartbeats()
-	if c.httpClient != nil {
-		c.httpClient.SetBuilderConfig(config)
+	newHTTPClient := c.httpClient
+	if newHTTPClient != nil {
+		newHTTPClient = newHTTPClient.Clone()
+		newHTTPClient.SetBuilderConfig(config)
 	}
-	newC := &clientImpl{
-		httpClient:        c.httpClient,
-		signer:            c.signer,
-		apiKey:            c.apiKey,
-		builderCfg:        config,
-		signatureType:     c.signatureType,
-		authNonce:         c.authNonce,
-		funder:            c.funder,
-		saltGenerator:     c.saltGenerator,
-		cache:             c.cache,
-		geoblockHost:      c.geoblockHost,
-		geoblockClient:    c.geoblockClient,
-		rfq:               c.rfq,
-		ws:                c.ws,
-		heartbeat:         c.heartbeat,
-		heartbeatInterval: c.heartbeatInterval,
-	}
+	newC := c.cloneWithTransport(newHTTPClient)
+	newC.builderCfg = config
 	newC.startHeartbeats()
 	return newC
 }
@@ -276,33 +260,20 @@ func (c *clientImpl) WithSaltGenerator(gen SaltGenerator) Client {
 
 // WithUseServerTime configures the transport to use server time for timestamps.
 func (c *clientImpl) WithUseServerTime(use bool) Client {
-	if c.httpClient != nil {
-		c.httpClient.SetUseServerTime(use)
+	newHTTPClient := c.httpClient
+	if newHTTPClient != nil {
+		newHTTPClient = newHTTPClient.Clone()
+		newHTTPClient.SetUseServerTime(use)
 	}
-	return c
+	return c.cloneWithTransport(newHTTPClient)
 }
 
 // WithGeoblockHost sets the geoblock host.
 func (c *clientImpl) WithGeoblockHost(host string) Client {
-	newC := &clientImpl{
-		httpClient:        c.httpClient,
-		signer:            c.signer,
-		apiKey:            c.apiKey,
-		builderCfg:        c.builderCfg,
-		signatureType:     c.signatureType,
-		authNonce:         c.authNonce,
-		funder:            c.funder,
-		saltGenerator:     c.saltGenerator,
-		cache:             c.cache,
-		geoblockHost:      host,
-		geoblockClient:    nil,
-		rfq:               c.rfq,
-		ws:                c.ws,
-		heartbeat:         c.heartbeat,
-		heartbeatInterval: c.heartbeatInterval,
-	}
-	if c.httpClient != nil {
-		newC.geoblockClient = c.httpClient.CloneWithBaseURL(host)
+	newC := c.cloneWithTransport(c.httpClient)
+	newC.geoblockHost = host
+	if newC.httpClient != nil {
+		newC.geoblockClient = newC.httpClient.CloneWithBaseURL(host)
 	}
 	return newC
 }

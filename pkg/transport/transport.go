@@ -116,6 +116,14 @@ func (c *Client) CloneWithBaseURL(baseURL string) *Client {
 	return clone
 }
 
+// Clone creates a copy of the client with the same base URL and all current settings.
+func (c *Client) Clone() *Client {
+	if c == nil {
+		return nil
+	}
+	return c.CloneWithBaseURL(c.baseURL)
+}
+
 // SetUserAgent sets the User-Agent header value for all subsequent requests.
 func (c *Client) SetUserAgent(userAgent string) {
 	if userAgent != "" {

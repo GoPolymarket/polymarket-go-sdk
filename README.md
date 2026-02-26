@@ -66,11 +66,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/GoPolymarket/polymarket-go-sdk"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/ws"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/rtds"
 )
 
 func main() {
@@ -88,14 +91,31 @@ func main() {
 		Passphrase: os.Getenv("POLY_API_PASSPHRASE"),
 	}
 
-	// 3. Create Client
-	client := polymarket.NewClient().WithAuth(signer, creds)
+	// 3. Optional: Explicit WS/RTDS runtime config (instead of env vars)
+	wsCfg := ws.DefaultClientConfig()
+	wsCfg.ReconnectMax = 10
+	wsCfg.HeartbeatInterval = 5 * time.Second
 
-	// 4. Check System Status
-	status, _ := client.CLOB.Health(context.Background())
-	fmt.Println("System Status:", status)
+	rtdsCfg := rtds.DefaultClientConfig()
+	rtdsCfg.PingInterval = 3 * time.Second
+
+	// 4. Create Client (strict constructor returns init errors)
+	client, err := polymarket.NewClientE(
+		polymarket.WithCLOBWSConfig(wsCfg),
+		polymarket.WithRTDSConfig(rtdsCfg),
+	)
+	if err != nil {
+		log.Printf("client initialized with partial failures: %v", err)
+	}
+	client = client.WithAuth(signer, creds)
+
+	// 5. Check System Status
+status, _ := client.CLOB.Health(context.Background())
+fmt.Println("System Status:", status)
 }
 ```
+
+> Tip: call `WithAuth(...)` before starting WebSocket subscriptions so auth and stream lifecycle stay aligned.
 
 ### 2. Place an Order (Complex Signing Made Easy)
 
@@ -158,10 +178,10 @@ fmt.Printf("Fetched %d active markets\n", len(allMarkets))
 Balance/allowance requests now support `asset_type`, `token_id`, and `signature_type` (with `asset` kept for compatibility). Responses return an `allowances` map keyed by spender address.
 
 ```go
-// Set a default signature type for balance/rewards queries (0=EOA, 1=Proxy, 2=Safe)
-client = client.WithSignatureType(auth.SignatureProxy)
+// Set a default signature type on the CLOB client (0=EOA, 1=Proxy, 2=Safe)
+clobClient := client.CLOB.WithSignatureType(auth.SignatureProxy)
 
-bal, err := client.CLOB.BalanceAllowance(ctx, &clobtypes.BalanceAllowanceRequest{
+bal, err := clobClient.BalanceAllowance(ctx, &clobtypes.BalanceAllowanceRequest{
     AssetType: clobtypes.AssetTypeConditional,
     TokenID:   "TOKEN_ID_HERE",
 })
@@ -171,7 +191,7 @@ if err != nil {
 fmt.Println("Balance:", bal.Balance)
 fmt.Println("Allowances:", bal.Allowances)
 
-rewards, err := client.CLOB.UserRewardsByMarket(ctx, &clobtypes.UserRewardsByMarketRequest{
+rewards, err := clobClient.UserRewardsByMarket(ctx, &clobtypes.UserRewardsByMarketRequest{
     Date:          "2026-01-01",
     OrderBy:       "date",
     NoCompetition: true,
@@ -325,7 +345,7 @@ Contributions are welcome! Please check out the `examples/` directory for more u
 **Requirements**:
 *   Pass `go test ./...`
 *   Pass `golangci-lint run ./...`
-*   Maintain >10% test coverage (strictly enforced by CI).
+*   Maintain >=40% test coverage (strictly enforced by CI).
 
 ## 📜 License
 

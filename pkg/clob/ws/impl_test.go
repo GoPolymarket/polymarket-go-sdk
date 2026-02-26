@@ -847,6 +847,28 @@ func TestAuthenticate(t *testing.T) {
 	}
 }
 
+func TestCloneAuthenticateDoesNotMutateOriginal(t *testing.T) {
+	c := newTestClient()
+	c.apiKey = &auth.APIKey{Key: "orig", Secret: "s", Passphrase: "p"}
+
+	cloned := c.Clone()
+	clonedClient, ok := cloned.(*clientImpl)
+	if !ok {
+		t.Fatalf("expected *clientImpl clone, got %T", cloned)
+	}
+	if clonedClient == c {
+		t.Fatal("expected clone to be a distinct instance")
+	}
+
+	clonedClient.Authenticate(nil, &auth.APIKey{Key: "new", Secret: "s", Passphrase: "p"})
+	if c.apiKey == nil || c.apiKey.Key != "orig" {
+		t.Fatal("original client auth should remain unchanged")
+	}
+	if clonedClient.apiKey == nil || clonedClient.apiKey.Key != "new" {
+		t.Fatal("cloned client auth should be updated")
+	}
+}
+
 func TestDeauthenticate(t *testing.T) {
 	c := newTestClient()
 	c.apiKey = &auth.APIKey{Key: "k", Secret: "s", Passphrase: "p"}

@@ -1,6 +1,8 @@
 package polymarket
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
@@ -27,10 +29,38 @@ type Client struct {
 	CTF    ctf.Client
 
 	builderCfg *auth.BuilderConfig
+	InitErrors []error
+}
+
+// InitError records a non-fatal client initialization failure for a sub-service.
+type InitError struct {
+	Component string
+	Err       error
+}
+
+func (e *InitError) Error() string {
+	return fmt.Sprintf("init %s client: %v", e.Component, e.Err)
+}
+
+func (e *InitError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Err
 }
 
 // NewClient creates a new root client with optional overrides.
 func NewClient(opts ...Option) *Client {
+	c, _ := newClient(false, opts...)
+	return c
+}
+
+// NewClientE creates a new root client and returns an aggregated error if any sub-client fails to initialize.
+func NewClientE(opts ...Option) (*Client, error) {
+	return newClient(true, opts...)
+}
+
+func newClient(strict bool, opts ...Option) (*Client, error) {
 	// 1. Initialize with default configuration
 	c := &Client{Config: DefaultConfig()}
 
@@ -71,7 +101,12 @@ func NewClient(opts ...Option) *Client {
 		if rtdsURL == "" {
 			rtdsURL = rtds.ProdURL
 		}
-		c.RTDS, _ = rtds.NewClient(rtdsURL)
+		rtdsClient, err := rtds.NewClientWithConfig(rtdsURL, c.Config.RTDSConfig)
+		if err != nil {
+			c.InitErrors = append(c.InitErrors, &InitError{Component: "rtds", Err: err})
+		} else {
+			c.RTDS = rtdsClient
+		}
 	}
 	if c.CTF == nil {
 		c.CTF = ctf.NewClient()
@@ -82,7 +117,12 @@ func NewClient(opts ...Option) *Client {
 		if wsURL == "" {
 			wsURL = ws.ProdBaseURL
 		}
-		c.CLOBWS, _ = ws.NewClient(wsURL, nil, nil)
+		wsClient, err := ws.NewClientWithConfig(wsURL, nil, nil, c.Config.CLOBWSConfig)
+		if err != nil {
+			c.InitErrors = append(c.InitErrors, &InitError{Component: "clob_ws", Err: err})
+		} else {
+			c.CLOBWS = wsClient
+		}
 	}
 
 	// 5. Apply builder attribution if configured
@@ -90,16 +130,38 @@ func NewClient(opts ...Option) *Client {
 		c.CLOB = c.CLOB.WithBuilderConfig(c.builderCfg)
 	}
 
-	return c
+	if strict && len(c.InitErrors) > 0 {
+		return c, errors.Join(c.InitErrors...)
+	}
+	return c, nil
 }
 
 // WithAuth returns a new client with auth credentials applied to all sub-clients.
+// For best WebSocket behavior, call this before opening WS subscriptions.
 func (c *Client) WithAuth(signer auth.Signer, apiKey *auth.APIKey) *Client {
+	if c == nil {
+		return nil
+	}
+
+	type wsCloner interface {
+		Clone() ws.Client
+	}
+
+	next := *c
 	if c.CLOB != nil {
-		c.CLOB = c.CLOB.WithAuth(signer, apiKey)
+		next.CLOB = c.CLOB.WithAuth(signer, apiKey)
 	}
 	if c.CLOBWS != nil {
-		c.CLOBWS = c.CLOBWS.Authenticate(signer, apiKey)
+		if cloner, ok := c.CLOBWS.(wsCloner); ok {
+			if cloned := cloner.Clone(); cloned != nil {
+				next.CLOBWS = cloned.Authenticate(signer, apiKey)
+			} else {
+				next.CLOBWS = c.CLOBWS
+			}
+		} else {
+			// Unknown implementations are left untouched to avoid in-place auth mutation.
+			next.CLOBWS = c.CLOBWS
+		}
 	}
-	return c
+	return &next
 }

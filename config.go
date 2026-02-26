@@ -3,6 +3,8 @@ package polymarket
 import (
 	"time"
 
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/ws"
+	"github.com/GoPolymarket/polymarket-go-sdk/pkg/rtds"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
 )
 
@@ -25,6 +27,8 @@ type Config struct {
 	UserAgent     string
 	Timeout       time.Duration
 	UseServerTime bool
+	CLOBWSConfig  ws.ClientConfig
+	RTDSConfig    rtds.ClientConfig
 }
 
 // DefaultConfig returns default service endpoints.
@@ -43,5 +47,8 @@ func DefaultConfig() Config {
 		UserAgent:     "github.com/GoPolymarket/polymarket-go-sdk",
 		Timeout:       30 * time.Second,
 		UseServerTime: false,
+		// Keep legacy env-driven behavior for backward compatibility at the root client level.
+		CLOBWSConfig: ws.ClientConfigFromEnv(),
+		RTDSConfig:   rtds.ClientConfigFromEnv(),
 	}
 }
