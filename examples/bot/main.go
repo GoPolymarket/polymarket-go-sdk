@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Polymarket Trading Bot Example ===\n")
+	fmt.Println("=== Polymarket Trading Bot Example ===")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

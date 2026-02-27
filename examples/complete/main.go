@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Polymarket Go SDK Examples ===\n")
+	fmt.Println("=== Polymarket Go SDK Examples ===")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -255,7 +255,7 @@ func runAuthExamples(ctx context.Context) error {
 
 	safeAddr, err := auth.DeriveSafeWallet(signer.Address())
 	if err != nil {
-		fmt.Printf("3. Safe wallet: (error: %w)\n", err)
+		fmt.Printf("3. Safe wallet: (error: %v)\n", err)
 	} else {
 		fmt.Printf("3. Safe wallet: %s\n", safeAddr.Hex())
 	}
