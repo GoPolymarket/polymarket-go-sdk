@@ -23,7 +23,9 @@ fi
 pairs=(
   "GoPolymarket/go-builder-relayer-client:platform-core"
   "GoPolymarket/polymarket-go-sdk:platform-core"
-  "GoPolymarket/polymarket-trader:company-a"
+  "GoPolymarket/pmx-alpha:company-a"
+  "GoPolymarket/pmx-gateway:company-b"
+  "GoPolymarket/pmx-builder-ops:company-c"
 )
 
 echo "Dispatching agent-team-delivery.yml to ${#pairs[@]} repositories"

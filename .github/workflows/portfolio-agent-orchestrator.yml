@@ -35,9 +35,12 @@ jobs:
             company: platform-core
           - repo: GoPolymarket/polymarket-go-sdk
             company: platform-core
-          # polygate temporarily excluded from portfolio auto-dispatch
-          - repo: GoPolymarket/polymarket-trader
+          - repo: GoPolymarket/pmx-alpha
             company: company-a
+          - repo: GoPolymarket/pmx-gateway
+            company: company-b
+          - repo: GoPolymarket/pmx-builder-ops
+            company: company-c
 
     steps:
       - name: Resolve mode
