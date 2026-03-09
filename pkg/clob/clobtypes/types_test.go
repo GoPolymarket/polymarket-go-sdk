@@ -9,9 +9,9 @@ import (
 
 func TestOrderTypeConstants(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		orderType OrderType
-		expected string
+		expected  string
 	}{
 		{"GTC", OrderTypeGTC, "GTC"},
 		{"GTD", OrderTypeGTD, "GTD"},
@@ -669,6 +669,32 @@ func TestOrderResponse_ExpandedFields(t *testing.T) {
 	}
 	if resp.OrderType != "GTC" {
 		t.Errorf("OrderType = %s, want GTC", resp.OrderType)
+	}
+}
+
+func TestOrderResponse_FlexibleTimeFields(t *testing.T) {
+	raw := `{
+		"id": "order-123",
+		"expiration": 1700000002,
+		"created_at": 1700000000,
+		"timestamp": 1700000001
+	}`
+
+	var resp OrderResponse
+	if err := json.Unmarshal([]byte(raw), &resp); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if resp.CreatedAt != "1700000000" {
+		t.Errorf("CreatedAt = %s, want 1700000000", resp.CreatedAt)
+	}
+	if resp.Timestamp != "1700000001" {
+		t.Errorf("Timestamp = %s, want 1700000001", resp.Timestamp)
+	}
+	if resp.Expiration != "1700000002" {
+		t.Errorf("Expiration = %s, want 1700000002", resp.Expiration)
+	}
+	if resp.ID != "order-123" {
+		t.Errorf("ID = %s, want order-123", resp.ID)
 	}
 }
 

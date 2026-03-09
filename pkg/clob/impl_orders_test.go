@@ -132,6 +132,31 @@ func TestOrderManagementMethods(t *testing.T) {
 		if err != nil || len(resp.Data) == 0 {
 			t.Errorf("Orders list failed: %v", err)
 		}
+		if resp.Data[0].ID != "o1" {
+			t.Errorf("Orders list ID = %s, want o1", resp.Data[0].ID)
+		}
+	})
+
+	t.Run("OrdersListNumericCreatedAt", func(t *testing.T) {
+		doer := &staticDoer{
+			responses: map[string]string{"/data/orders": `{"data":[{"orderID":"o1","created_at":1700000000,"timestamp":1700000001}],"next_cursor":"LTE="}`},
+		}
+		client := &clientImpl{
+			httpClient: transport.NewClient(doer, "http://example"),
+		}
+		resp, err := client.Orders(ctx, nil)
+		if err != nil {
+			t.Fatalf("Orders list failed: %v", err)
+		}
+		if len(resp.Data) != 1 {
+			t.Fatalf("len(resp.Data) = %d, want 1", len(resp.Data))
+		}
+		if resp.Data[0].CreatedAt != "1700000000" {
+			t.Errorf("CreatedAt = %s, want 1700000000", resp.Data[0].CreatedAt)
+		}
+		if resp.Data[0].Timestamp != "1700000001" {
+			t.Errorf("Timestamp = %s, want 1700000001", resp.Data[0].Timestamp)
+		}
 	})
 
 	t.Run("OrderScoring", func(t *testing.T) {

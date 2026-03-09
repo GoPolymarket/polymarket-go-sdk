@@ -3,6 +3,7 @@ package clobtypes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
 )
@@ -322,21 +323,21 @@ type (
 	}
 	PricesHistoryResponse []PriceHistoryPoint
 	OrderResponse         struct {
-		ID            string `json:"orderID"`
-		Status        string `json:"status"`
-		AssetID       string `json:"asset_id,omitempty"`
-		Market        string `json:"market,omitempty"`
-		Side          string `json:"side,omitempty"`
-		Price         string `json:"price,omitempty"`
-		OriginalSize  string `json:"original_size,omitempty"`
-		SizeMatched   string `json:"size_matched,omitempty"`
-		Owner         string `json:"owner,omitempty"`
-		MakerAddress  string `json:"maker_address,omitempty"`
-		OrderType     string `json:"order_type,omitempty"`
-		Expiration    string `json:"expiration,omitempty"`
-		CreatedAt     string `json:"created_at,omitempty"`
-		Timestamp     string `json:"timestamp,omitempty"`
-		Outcome       string `json:"outcome,omitempty"`
+		ID           string `json:"orderID"`
+		Status       string `json:"status"`
+		AssetID      string `json:"asset_id,omitempty"`
+		Market       string `json:"market,omitempty"`
+		Side         string `json:"side,omitempty"`
+		Price        string `json:"price,omitempty"`
+		OriginalSize string `json:"original_size,omitempty"`
+		SizeMatched  string `json:"size_matched,omitempty"`
+		Owner        string `json:"owner,omitempty"`
+		MakerAddress string `json:"maker_address,omitempty"`
+		OrderType    string `json:"order_type,omitempty"`
+		Expiration   string `json:"expiration,omitempty"`
+		CreatedAt    string `json:"created_at,omitempty"`
+		Timestamp    string `json:"timestamp,omitempty"`
+		Outcome      string `json:"outcome,omitempty"`
 	}
 	PostOrdersResponse []OrderResponse
 	OrdersResponse     struct {
@@ -626,4 +627,92 @@ func (p *PricesHistoryResponse) UnmarshalJSON(data []byte) error {
 	}
 	*p = nil
 	return nil
+}
+
+// OrderResponse supports both `orderID` and `id`, and accepts either JSON
+// strings or numbers for time-like fields returned by the upstream API.
+func (o *OrderResponse) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		*o = OrderResponse{}
+		return nil
+	}
+
+	var raw struct {
+		OrderID      string          `json:"orderID"`
+		ID           string          `json:"id"`
+		Status       string          `json:"status"`
+		AssetID      string          `json:"asset_id,omitempty"`
+		Market       string          `json:"market,omitempty"`
+		Side         string          `json:"side,omitempty"`
+		Price        string          `json:"price,omitempty"`
+		OriginalSize string          `json:"original_size,omitempty"`
+		SizeMatched  string          `json:"size_matched,omitempty"`
+		Owner        string          `json:"owner,omitempty"`
+		MakerAddress string          `json:"maker_address,omitempty"`
+		OrderType    string          `json:"order_type,omitempty"`
+		Expiration   json.RawMessage `json:"expiration,omitempty"`
+		CreatedAt    json.RawMessage `json:"created_at,omitempty"`
+		Timestamp    json.RawMessage `json:"timestamp,omitempty"`
+		Outcome      string          `json:"outcome,omitempty"`
+	}
+	if err := json.Unmarshal(trimmed, &raw); err != nil {
+		return err
+	}
+
+	expiration, err := unmarshalOrderResponseStringLike(raw.Expiration)
+	if err != nil {
+		return fmt.Errorf("expiration: %w", err)
+	}
+	createdAt, err := unmarshalOrderResponseStringLike(raw.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("created_at: %w", err)
+	}
+	timestamp, err := unmarshalOrderResponseStringLike(raw.Timestamp)
+	if err != nil {
+		return fmt.Errorf("timestamp: %w", err)
+	}
+
+	id := raw.OrderID
+	if id == "" {
+		id = raw.ID
+	}
+
+	*o = OrderResponse{
+		ID:           id,
+		Status:       raw.Status,
+		AssetID:      raw.AssetID,
+		Market:       raw.Market,
+		Side:         raw.Side,
+		Price:        raw.Price,
+		OriginalSize: raw.OriginalSize,
+		SizeMatched:  raw.SizeMatched,
+		Owner:        raw.Owner,
+		MakerAddress: raw.MakerAddress,
+		OrderType:    raw.OrderType,
+		Expiration:   expiration,
+		CreatedAt:    createdAt,
+		Timestamp:    timestamp,
+		Outcome:      raw.Outcome,
+	}
+	return nil
+}
+
+func unmarshalOrderResponseStringLike(data json.RawMessage) (string, error) {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return "", nil
+	}
+
+	var value string
+	if err := json.Unmarshal(trimmed, &value); err == nil {
+		return value, nil
+	}
+
+	var number json.Number
+	if err := json.Unmarshal(trimmed, &number); err == nil {
+		return number.String(), nil
+	}
+
+	return "", fmt.Errorf("expected string or number, got %s", string(trimmed))
 }
