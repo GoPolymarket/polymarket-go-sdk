@@ -9,9 +9,9 @@ import (
 
 func TestOrderTypeConstants(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		orderType OrderType
-		expected string
+		expected  string
 	}{
 		{"GTC", OrderTypeGTC, "GTC"},
 		{"GTD", OrderTypeGTD, "GTD"},
@@ -669,6 +669,97 @@ func TestOrderResponse_ExpandedFields(t *testing.T) {
 	}
 	if resp.OrderType != "GTC" {
 		t.Errorf("OrderType = %s, want GTC", resp.OrderType)
+	}
+}
+
+func TestOrderResponse_FlexibleTimeFields(t *testing.T) {
+	raw := `{
+		"id": "order-123",
+		"expiration": 1700000002,
+		"created_at": 1700000000,
+		"timestamp": 1700000001
+	}`
+
+	var resp OrderResponse
+	if err := json.Unmarshal([]byte(raw), &resp); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if resp.CreatedAt != "1700000000" {
+		t.Errorf("CreatedAt = %s, want 1700000000", resp.CreatedAt)
+	}
+	if resp.Timestamp != "1700000001" {
+		t.Errorf("Timestamp = %s, want 1700000001", resp.Timestamp)
+	}
+	if resp.Expiration != "1700000002" {
+		t.Errorf("Expiration = %s, want 1700000002", resp.Expiration)
+	}
+	if resp.ID != "order-123" {
+		t.Errorf("ID = %s, want order-123", resp.ID)
+	}
+}
+
+func TestOrderResponse_UnmarshalPreservesExistingFields(t *testing.T) {
+	resp := OrderResponse{
+		ID:         "existing-id",
+		Status:     "LIVE",
+		AssetID:    "0xabc",
+		CreatedAt:  "100",
+		Timestamp:  "101",
+		Expiration: "102",
+	}
+
+	if err := json.Unmarshal([]byte(`{"created_at":1700000000}`), &resp); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if resp.ID != "existing-id" {
+		t.Errorf("ID = %s, want existing-id", resp.ID)
+	}
+	if resp.Status != "LIVE" {
+		t.Errorf("Status = %s, want LIVE", resp.Status)
+	}
+	if resp.AssetID != "0xabc" {
+		t.Errorf("AssetID = %s, want 0xabc", resp.AssetID)
+	}
+	if resp.CreatedAt != "1700000000" {
+		t.Errorf("CreatedAt = %s, want 1700000000", resp.CreatedAt)
+	}
+	if resp.Timestamp != "101" {
+		t.Errorf("Timestamp = %s, want 101", resp.Timestamp)
+	}
+	if resp.Expiration != "102" {
+		t.Errorf("Expiration = %s, want 102", resp.Expiration)
+	}
+
+	if err := json.Unmarshal([]byte(`null`), &resp); err != nil {
+		t.Fatalf("unmarshal null failed: %v", err)
+	}
+	if resp.ID != "existing-id" {
+		t.Errorf("ID after null = %s, want existing-id", resp.ID)
+	}
+
+	if err := json.Unmarshal([]byte(`{}`), &resp); err != nil {
+		t.Fatalf("unmarshal empty object failed: %v", err)
+	}
+	if resp.ID != "existing-id" {
+		t.Errorf("ID after empty object = %s, want existing-id", resp.ID)
+	}
+	if resp.CreatedAt != "1700000000" {
+		t.Errorf("CreatedAt after empty object = %s, want 1700000000", resp.CreatedAt)
+	}
+}
+
+func TestOrderResponse_OrderIDPrecedence(t *testing.T) {
+	raw := `{
+		"orderID": "primary-id",
+		"id": "fallback-id"
+	}`
+
+	var resp OrderResponse
+	if err := json.Unmarshal([]byte(raw), &resp); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if resp.ID != "primary-id" {
+		t.Errorf("ID = %s, want primary-id", resp.ID)
 	}
 }
 
