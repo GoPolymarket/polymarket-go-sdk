@@ -322,28 +322,47 @@ type (
 	}
 	PricesHistoryResponse []PriceHistoryPoint
 	OrderResponse         struct {
-		ID            string `json:"orderID"`
-		Status        string `json:"status"`
-		AssetID       string `json:"asset_id,omitempty"`
-		Market        string `json:"market,omitempty"`
-		Side          string `json:"side,omitempty"`
-		Price         string `json:"price,omitempty"`
-		OriginalSize  string `json:"original_size,omitempty"`
-		SizeMatched   string `json:"size_matched,omitempty"`
-		Owner         string `json:"owner,omitempty"`
-		MakerAddress  string `json:"maker_address,omitempty"`
-		OrderType     string `json:"order_type,omitempty"`
-		Expiration    string `json:"expiration,omitempty"`
-		CreatedAt     string `json:"created_at,omitempty"`
-		Timestamp     string `json:"timestamp,omitempty"`
-		Outcome       string `json:"outcome,omitempty"`
+		ID           string `json:"orderId"`
+		Status       string `json:"status"`
+		AssetID      string `json:"asset_id,omitempty"`
+		Market       string `json:"market,omitempty"`
+		Side         string `json:"side,omitempty"`
+		Price        string `json:"price,omitempty"`
+		OriginalSize string `json:"original_size,omitempty"`
+		SizeMatched  string `json:"size_matched,omitempty"`
+		Owner        string `json:"owner,omitempty"`
+		MakerAddress string `json:"maker_address,omitempty"`
+		OrderType    string `json:"order_type,omitempty"`
+		Expiration   string `json:"expiration,omitempty"`
+		CreatedAt    int    `json:"created_at,omitempty"`
+		Timestamp    string `json:"timestamp,omitempty"`
+		Outcome      string `json:"outcome,omitempty"`
 	}
+
+	OrderResponseIdField struct {
+		ID           string `json:"id"`
+		Status       string `json:"status"`
+		AssetID      string `json:"asset_id,omitempty"`
+		Market       string `json:"market,omitempty"`
+		Side         string `json:"side,omitempty"`
+		Price        string `json:"price,omitempty"`
+		OriginalSize string `json:"original_size,omitempty"`
+		SizeMatched  string `json:"size_matched,omitempty"`
+		Owner        string `json:"owner,omitempty"`
+		MakerAddress string `json:"maker_address,omitempty"`
+		OrderType    string `json:"order_type,omitempty"`
+		Expiration   string `json:"expiration,omitempty"`
+		CreatedAt    int    `json:"created_at,omitempty"`
+		Timestamp    string `json:"timestamp,omitempty"`
+		Outcome      string `json:"outcome,omitempty"`
+	}
+
 	PostOrdersResponse []OrderResponse
 	OrdersResponse     struct {
-		Data       []OrderResponse `json:"data"`
-		NextCursor string          `json:"next_cursor"`
-		Limit      int             `json:"limit"`
-		Count      int             `json:"count"`
+		Data       []OrderResponseIdField `json:"data"`
+		NextCursor string                 `json:"next_cursor"`
+		Limit      int                    `json:"limit"`
+		Count      int                    `json:"count"`
 	}
 	CancelResponse struct {
 		Status string `json:"status"`

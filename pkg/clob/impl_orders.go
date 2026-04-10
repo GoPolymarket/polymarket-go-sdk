@@ -331,8 +331,8 @@ func (c *clientImpl) Trades(ctx context.Context, req *clobtypes.TradesRequest) (
 	return resp, mapError(err)
 }
 
-func (c *clientImpl) OrdersAll(ctx context.Context, req *clobtypes.OrdersRequest) ([]clobtypes.OrderResponse, error) {
-	var results []clobtypes.OrderResponse
+func (c *clientImpl) OrdersAll(ctx context.Context, req *clobtypes.OrdersRequest) ([]clobtypes.OrderResponseIdField, error) {
+	var results []clobtypes.OrderResponseIdField
 	cursor := clobtypes.InitialCursor
 	if req != nil {
 		if req.NextCursor != "" {

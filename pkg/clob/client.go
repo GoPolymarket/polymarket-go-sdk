@@ -143,7 +143,7 @@ type Client interface {
 	Trades(ctx context.Context, req *clobtypes.TradesRequest) (clobtypes.TradesResponse, error)
 
 	// OrdersAll automatically iterates through all pages to retrieve all open orders.
-	OrdersAll(ctx context.Context, req *clobtypes.OrdersRequest) ([]clobtypes.OrderResponse, error)
+	OrdersAll(ctx context.Context, req *clobtypes.OrdersRequest) ([]clobtypes.OrderResponseIdField, error)
 	// TradesAll automatically iterates through all pages to retrieve all recent trades.
 	TradesAll(ctx context.Context, req *clobtypes.TradesRequest) ([]clobtypes.Trade, error)
 	// BuilderTradesAll automatically iterates through all pages to retrieve all trades attributed to a builder.
