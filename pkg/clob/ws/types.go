@@ -140,13 +140,14 @@ type PriceEvent struct {
 }
 
 type PriceChangeEvent struct {
-	AssetID string `json:"asset_id"`
-	BestAsk string `json:"best_ask"`
-	BestBid string `json:"best_bid"`
-	Hash    string `json:"hash"`
-	Price   string `json:"price"`
-	Side    string `json:"side"`
-	Size    string `json:"size"`
+	AssetID   string `json:"asset_id"`
+	BestAsk   string `json:"best_ask"`
+	BestBid   string `json:"best_bid"`
+	Hash      string `json:"hash"`
+	Price     string `json:"price"`
+	Side      string `json:"side"`
+	Size      string `json:"size"`
+	Timestamp string `json:"timestamp"` // Sometimes string in JSON
 }
 
 type MidpointEvent struct {

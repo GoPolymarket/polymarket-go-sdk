@@ -198,6 +198,7 @@ func (c *clientImpl) dispatchPrice(event PriceEvent) {
 	for _, sub := range subs {
 		for _, priceChange := range event.PriceChanges {
 			if sub.matchesAsset(priceChange.AssetID) {
+				priceChange.Timestamp = event.Timestamp
 				sub.trySend(priceChange)
 			}
 		}
