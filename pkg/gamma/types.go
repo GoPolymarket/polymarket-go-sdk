@@ -226,13 +226,14 @@ type Market struct {
 	NegRiskRequestID   string  `json:"negRiskRequestId,omitempty"`
 	EnableOrderBook    bool    `json:"enableOrderBook,omitempty"`
 	QuestionID         string  `json:"questionId,omitempty"`
-	Volume24hr         string  `json:"volume24hr,omitempty"`
-	Spread             string  `json:"spread,omitempty"`
-	BestBid            string  `json:"bestBid,omitempty"`
-	BestAsk            string  `json:"bestAsk,omitempty"`
-	LastTradePrice     string  `json:"lastTradePrice,omitempty"`
+	Volume24hr         float64 `json:"volume24hr,omitempty"`
+	Spread             float64 `json:"spread,omitempty"`
+	BestBid            float64 `json:"bestBid,omitempty"`
+	BestAsk            float64 `json:"bestAsk,omitempty"`
+	LastTradePrice     float64 `json:"lastTradePrice,omitempty"`
 	CommentCount       int     `json:"commentCount,omitempty"`
 	Cyom               bool    `json:"cyom,omitempty"`
+	EventStartTime     string  `json:"eventStartTime,omitempty"`
 }
 
 // ParsedTokens builds a Token slice by combining ClobTokenIds and Outcomes.
@@ -293,8 +294,8 @@ type Event struct {
 	New              bool     `json:"new"`
 	Featured         bool     `json:"featured"`
 	Restricted       bool     `json:"restricted"`
-	Liquidity        string   `json:"liquidity"`
-	Volume           string   `json:"volume"`
+	Liquidity        float64  `json:"liquidity"`
+	Volume           float64  `json:"volume"`
 	Markets          []Market `json:"markets"`
 	NegRisk          bool     `json:"negRisk,omitempty"`
 	EnableNegRisk    bool     `json:"enableNegRisk,omitempty"`
@@ -302,6 +303,7 @@ type Event struct {
 	CommentCount     int      `json:"commentCount,omitempty"`
 	CompetitionState string   `json:"competitionState,omitempty"`
 	Cyom             bool     `json:"cyom,omitempty"`
+	Tags             []Tag    `json:"tags,omitempty"`
 }
 
 type Team struct {
