@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
+	"github.com/shopspring/decimal"
 )
 
 type staticDoer struct {
@@ -220,11 +221,13 @@ func TestMarket_NegRiskFields(t *testing.T) {
 	if !m.EnableOrderBook {
 		t.Error("expected EnableOrderBook=true")
 	}
-	if m.Volume24hr != 1000000 {
-		t.Errorf("Volume24hr = %v, want 1000000", m.Volume24hr)
+	wantVol := decimal.NewFromInt(1000000)
+	if !m.Volume24hr.Equal(wantVol) {
+		t.Errorf("Volume24hr = %v, want %v", m.Volume24hr, wantVol)
 	}
-	if m.BestBid != "0.48" {
-		t.Errorf("BestBid = %s, want 0.48", m.BestBid)
+	wantBid := decimal.RequireFromString("0.48")
+	if !m.BestBid.Equal(wantBid) {
+		t.Errorf("BestBid = %v, want %v", m.BestBid, wantBid)
 	}
 	if m.CommentCount != 42 {
 		t.Errorf("CommentCount = %d, want 42", m.CommentCount)

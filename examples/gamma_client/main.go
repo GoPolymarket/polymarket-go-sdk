@@ -27,7 +27,7 @@ func main() {
 	}
 
 	for _, m := range markets {
-		fmt.Printf("- [%s] %s (Vol: %s)\n", m.ID, m.Question, m.Volume)
+		fmt.Printf("- [%s] %s (Vol: %s)\n", m.ID, m.Question, m.Volume.String())
 	}
 
 	if len(markets) > 0 {
@@ -38,6 +38,6 @@ func main() {
 			log.Fatalf("Failed to fetch market details: %v", err)
 		}
 		fmt.Printf("Title: %s\n", market.Question)
-		fmt.Printf("Liquidity: %s\n", market.Liquidity)
+		fmt.Printf("Liquidity: %s\n", market.Liquidity.String())
 	}
 }

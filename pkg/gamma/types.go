@@ -1,6 +1,10 @@
 package gamma
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/shopspring/decimal"
+)
 
 // Request parameters
 type MarketsRequest struct {
@@ -212,9 +216,9 @@ type Market struct {
 	Slug                  string  `json:"slug"`
 	ResolutionSource      string  `json:"resolutionSource"`
 	EndDate               string  `json:"endDate"`
-	Liquidity             string  `json:"liquidity"`
-	StartDate             string  `json:"startDate"`
-	Volume                string  `json:"volume"`
+	Liquidity             decimal.Decimal `json:"liquidity"`
+	StartDate             string          `json:"startDate"`
+	Volume                decimal.Decimal `json:"volume"`
 	Active                bool    `json:"active"`
 	Closed                bool    `json:"closed"`
 	MarketMakerAddress    string  `json:"marketMakerAddress"`
@@ -229,19 +233,19 @@ type Market struct {
 	NegRiskRequestID      string  `json:"negRiskRequestId,omitempty"`
 	EnableOrderBook       bool    `json:"enableOrderBook,omitempty"`
 	QuestionID            string  `json:"questionId,omitempty"`
-	Volume24hr            float64 `json:"volume24hr,omitempty"`
-	Spread                string  `json:"spread,omitempty"`
-	BestBid               string  `json:"bestBid,omitempty"`
-	BestAsk               string  `json:"bestAsk,omitempty"`
-	LastTradePrice        string  `json:"lastTradePrice,omitempty"`
+	Volume24hr            decimal.Decimal `json:"volume24hr,omitempty"`
+	Spread                decimal.Decimal `json:"spread,omitempty"`
+	BestBid               decimal.Decimal `json:"bestBid,omitempty"`
+	BestAsk               decimal.Decimal `json:"bestAsk,omitempty"`
+	LastTradePrice        decimal.Decimal `json:"lastTradePrice,omitempty"`
 	CommentCount          int     `json:"commentCount,omitempty"`
 	Cyom                  bool    `json:"cyom,omitempty"`
-	OpenInterest          string  `json:"openInterest,omitempty"`
-	VolumeNum             string  `json:"volumeNum,omitempty"`
-	LiquidityNum          string  `json:"liquidityNum,omitempty"`
-	Volume1wk             int     `json:"volume1wk,omitempty"`
-	Volume1mo             int     `json:"volume1mo,omitempty"`
-	Volume1yr             int     `json:"volume1yr,omitempty"`
+	OpenInterest          decimal.Decimal `json:"openInterest,omitempty"`
+	VolumeNum             decimal.Decimal `json:"volumeNum,omitempty"`
+	LiquidityNum          decimal.Decimal `json:"liquidityNum,omitempty"`
+	Volume1wk             decimal.Decimal `json:"volume1wk,omitempty"`
+	Volume1mo             decimal.Decimal `json:"volume1mo,omitempty"`
+	Volume1yr             decimal.Decimal `json:"volume1yr,omitempty"`
 	GameStartTime         string  `json:"gameStartTime,omitempty"`
 	SecondsDelay          int     `json:"secondsDelay,omitempty"`
 	Category              string  `json:"category,omitempty"`
@@ -251,8 +255,8 @@ type Market struct {
 	TwitterCardImage      string  `json:"twitterCardImage,omitempty"`
 	MarketType            string  `json:"marketType,omitempty"`
 	FormatType            string  `json:"formatType,omitempty"`
-	LowerBound            string  `json:"lowerBound,omitempty"`
-	UpperBound            string  `json:"upperBound,omitempty"`
+	LowerBound            decimal.Decimal `json:"lowerBound,omitempty"`
+	UpperBound            decimal.Decimal `json:"upperBound,omitempty"`
 	ClosedTime            string  `json:"closedTime,omitempty"`
 	ResolvedBy            string  `json:"resolvedBy,omitempty"`
 	UmaEndDate            string  `json:"umaEndDate,omitempty"`
@@ -263,8 +267,8 @@ type Market struct {
 	AcceptingOrders       bool    `json:"acceptingOrders,omitempty"`
 	TeamAID               string  `json:"teamAID,omitempty"`
 	TeamBID               string  `json:"teamBID,omitempty"`
-	UmaBond               string  `json:"umaBond,omitempty"`
-	UmaReward             string  `json:"umaReward,omitempty"`
+	UmaBond               decimal.Decimal `json:"umaBond,omitempty"`
+	UmaReward             decimal.Decimal `json:"umaReward,omitempty"`
 	FpmmLive              bool    `json:"fpmmLive,omitempty"`
 	ShortOutcomes         string  `json:"shortOutcomes,omitempty"`
 	AutomaticallyResolved bool    `json:"automaticallyResolved,omitempty"`
@@ -333,8 +337,8 @@ type Event struct {
 	New               bool     `json:"new"`
 	Featured          bool     `json:"featured"`
 	Restricted        bool     `json:"restricted"`
-	Liquidity         string   `json:"liquidity"`
-	Volume            string   `json:"volume"`
+	Liquidity         decimal.Decimal `json:"liquidity"`
+	Volume            decimal.Decimal `json:"volume"`
 	Markets           []Market `json:"markets"`
 	NegRisk           bool     `json:"negRisk,omitempty"`
 	EnableNegRisk     bool     `json:"enableNegRisk,omitempty"`
@@ -344,7 +348,7 @@ type Event struct {
 	Cyom              bool     `json:"cyom,omitempty"`
 	Subtitle          string   `json:"subtitle,omitempty"`
 	ResolutionSource  string   `json:"resolutionSource,omitempty"`
-	OpenInterest      string   `json:"openInterest,omitempty"`
+	OpenInterest      decimal.Decimal `json:"openInterest,omitempty"`
 	SortBy            string   `json:"sortBy,omitempty"`
 	Category          string   `json:"category,omitempty"`
 	Subcategory       string   `json:"subcategory,omitempty"`
@@ -354,10 +358,10 @@ type Event struct {
 	CreatedBy         string   `json:"createdBy,omitempty"`
 	UpdatedBy         string   `json:"updatedBy,omitempty"`
 	CommentsEnabled   bool     `json:"commentsEnabled,omitempty"`
-	Volume24hr        int      `json:"volume24hr,omitempty"`
-	Volume1wk         int      `json:"volume1wk,omitempty"`
-	Volume1mo         int      `json:"volume1mo,omitempty"`
-	Volume1yr         int      `json:"volume1yr,omitempty"`
+	Volume24hr        decimal.Decimal `json:"volume24hr,omitempty"`
+	Volume1wk         decimal.Decimal `json:"volume1wk,omitempty"`
+	Volume1mo         decimal.Decimal `json:"volume1mo,omitempty"`
+	Volume1yr         decimal.Decimal `json:"volume1yr,omitempty"`
 	FeaturedImage     string   `json:"featuredImage,omitempty"`
 	DisqusThread      string   `json:"disqusThread,omitempty"`
 	ParentEvent       string   `json:"parentEvent,omitempty"`
