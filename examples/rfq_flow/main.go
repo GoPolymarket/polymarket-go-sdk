@@ -232,16 +232,13 @@ func loadAcceptRequestFromEnv() *rfq.RFQAcceptRequest {
 	tokenID := os.Getenv("RFQ_ACCEPT_TOKEN_ID")
 	maker := os.Getenv("RFQ_ACCEPT_MAKER")
 	signer := os.Getenv("RFQ_ACCEPT_SIGNER")
-	taker := os.Getenv("RFQ_ACCEPT_TAKER")
-	nonce := os.Getenv("RFQ_ACCEPT_NONCE")
 	expiration := os.Getenv("RFQ_ACCEPT_EXPIRATION")
 	side := os.Getenv("RFQ_ACCEPT_SIDE")
-	feeRate := os.Getenv("RFQ_ACCEPT_FEE_RATE_BPS")
 	signature := os.Getenv("RFQ_ACCEPT_SIGNATURE")
 	salt := os.Getenv("RFQ_ACCEPT_SALT")
 	owner := os.Getenv("RFQ_ACCEPT_OWNER")
 
-	if requestID == "" || quoteID == "" || makerAmount == "" || takerAmount == "" || tokenID == "" || maker == "" || signer == "" || taker == "" || nonce == "" || expiration == "" || side == "" || feeRate == "" || signature == "" || salt == "" || owner == "" {
+	if requestID == "" || quoteID == "" || makerAmount == "" || takerAmount == "" || tokenID == "" || maker == "" || signer == "" || expiration == "" || side == "" || signature == "" || salt == "" || owner == "" {
 		return nil
 	}
 
@@ -253,11 +250,8 @@ func loadAcceptRequestFromEnv() *rfq.RFQAcceptRequest {
 		TokenID:     tokenID,
 		Maker:       maker,
 		Signer:      signer,
-		Taker:       taker,
-		Nonce:       nonce,
 		Expiration:  expiration,
 		Side:        side,
-		FeeRateBps:  feeRate,
 		Signature:   signature,
 		Salt:        salt,
 		Owner:       owner,
@@ -272,16 +266,13 @@ func loadApproveRequestFromEnv() *rfq.RFQApproveQuote {
 	tokenID := os.Getenv("RFQ_APPROVE_TOKEN_ID")
 	maker := os.Getenv("RFQ_APPROVE_MAKER")
 	signer := os.Getenv("RFQ_APPROVE_SIGNER")
-	taker := os.Getenv("RFQ_APPROVE_TAKER")
-	nonce := os.Getenv("RFQ_APPROVE_NONCE")
 	expiration := os.Getenv("RFQ_APPROVE_EXPIRATION")
 	side := os.Getenv("RFQ_APPROVE_SIDE")
-	feeRate := os.Getenv("RFQ_APPROVE_FEE_RATE_BPS")
 	signature := os.Getenv("RFQ_APPROVE_SIGNATURE")
 	salt := os.Getenv("RFQ_APPROVE_SALT")
 	owner := os.Getenv("RFQ_APPROVE_OWNER")
 
-	if requestID == "" || quoteID == "" || makerAmount == "" || takerAmount == "" || tokenID == "" || maker == "" || signer == "" || taker == "" || nonce == "" || expiration == "" || side == "" || feeRate == "" || signature == "" || salt == "" || owner == "" {
+	if requestID == "" || quoteID == "" || makerAmount == "" || takerAmount == "" || tokenID == "" || maker == "" || signer == "" || expiration == "" || side == "" || signature == "" || salt == "" || owner == "" {
 		return nil
 	}
 
@@ -293,11 +284,8 @@ func loadApproveRequestFromEnv() *rfq.RFQApproveQuote {
 		TokenID:     tokenID,
 		Maker:       maker,
 		Signer:      signer,
-		Taker:       taker,
-		Nonce:       nonce,
 		Expiration:  expiration,
 		Side:        side,
-		FeeRateBps:  feeRate,
 		Signature:   signature,
 		Salt:        salt,
 		Owner:       owner,

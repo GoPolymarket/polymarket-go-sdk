@@ -78,6 +78,8 @@ const (
 	SignatureProxy SignatureType = 1
 	// SignatureGnosisSafe indicates a signature from a Gnosis Safe multisig.
 	SignatureGnosisSafe SignatureType = 2
+	// SignaturePoly1271 indicates an EIP-1271 compatible smart-contract wallet.
+	SignaturePoly1271 SignatureType = 3
 )
 
 // Supported chain IDs for Polymarket operations.

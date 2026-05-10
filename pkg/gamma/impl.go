@@ -230,6 +230,16 @@ func (c *clientImpl) Events(ctx context.Context, req *EventsRequest) ([]Event, e
 	return resp, err
 }
 
+func (c *clientImpl) EventsKeyset(ctx context.Context, req *EventsRequest) ([]Event, error) {
+	q := buildEventsQuery(req)
+	if req != nil && req.NextCursor != "" {
+		q.Set("next_cursor", req.NextCursor)
+	}
+	var resp []Event
+	err := c.httpClient.Get(ctx, "/events/keyset", q, &resp)
+	return resp, err
+}
+
 func (c *clientImpl) EventsAll(ctx context.Context, req *EventsRequest) ([]Event, error) {
 	limit := 100
 	if req != nil && req.Limit != nil {
@@ -340,6 +350,16 @@ func (c *clientImpl) Markets(ctx context.Context, req *MarketsRequest) ([]Market
 	q := buildMarketsQuery(req)
 	var resp []Market
 	err := c.httpClient.Get(ctx, "/markets", q, &resp)
+	return resp, err
+}
+
+func (c *clientImpl) MarketsKeyset(ctx context.Context, req *MarketsRequest) ([]Market, error) {
+	q := buildMarketsQuery(req)
+	if req != nil && req.NextCursor != "" {
+		q.Set("next_cursor", req.NextCursor)
+	}
+	var resp []Market
+	err := c.httpClient.Get(ctx, "/markets/keyset", q, &resp)
 	return resp, err
 }
 

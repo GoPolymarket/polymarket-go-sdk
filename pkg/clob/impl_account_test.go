@@ -92,7 +92,7 @@ func TestAccountMethods(t *testing.T) {
 		}
 		client := &clientImpl{httpClient: transport.NewClient(doer, "http://example")}
 		resp, err := client.UserEarnings(ctx, &clobtypes.UserEarningsRequest{Date: "2025-01-01"})
-		if err != nil || len(resp.Data) != 1 || resp.Data[0].Earnings != "10" {
+		if err != nil || len(resp.Data) != 1 || float64(resp.Data[0].Earnings) != 10 {
 			t.Errorf("UserEarnings failed: %v", err)
 		}
 	})

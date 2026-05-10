@@ -10,6 +10,7 @@ import (
 type MarketsRequest struct {
 	Limit               *int     `json:"limit,omitempty"`
 	Offset              *int     `json:"offset,omitempty"`
+	NextCursor          string   `json:"next_cursor,omitempty"`
 	Order               string   `json:"order,omitempty"`
 	Ascending           *bool    `json:"ascending,omitempty"`
 	Slug                string   `json:"slug,omitempty"`
@@ -89,6 +90,7 @@ type RelatedTagsBySlugRequest struct {
 type EventsRequest struct {
 	Limit           *int     `json:"limit,omitempty"`
 	Offset          *int     `json:"offset,omitempty"`
+	NextCursor      string   `json:"next_cursor,omitempty"`
 	Order           []string `json:"order,omitempty"`
 	Ascending       *bool    `json:"ascending,omitempty"`
 	IDs             []string `json:"id,omitempty"`

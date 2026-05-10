@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
 )
 
@@ -73,26 +74,24 @@ func orderWithSignature(order *clobtypes.SignedOrder) (map[string]interface{}, e
 		return nil, fmt.Errorf("invalid order side %q", order.Order.Side)
 	}
 
-	salt, err := saltToJSON(order.Order.Salt)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]interface{}{
-		"salt":          salt,
+	payload := map[string]interface{}{
+		"salt":          u256String(order.Order.Salt),
 		"maker":         order.Order.Maker.Hex(),
 		"signer":        order.Order.Signer.Hex(),
-		"taker":         order.Order.Taker.Hex(),
 		"tokenId":       u256String(order.Order.TokenID),
 		"makerAmount":   decimalString(order.Order.MakerAmount),
 		"takerAmount":   decimalString(order.Order.TakerAmount),
 		"side":          side,
 		"expiration":    u256String(order.Order.Expiration),
-		"nonce":         u256String(order.Order.Nonce),
-		"feeRateBps":    decimalString(order.Order.FeeRateBps),
 		"signatureType": sigType,
 		"signature":     order.Signature,
-	}, nil
+	}
+
+	// V2 fields - always include to match EIP-712 signed values
+	payload["timestamp"] = order.Order.Timestamp
+	payload["metadata"] = padBytes32(order.Order.Metadata)
+	payload["builder"] = padBytes32(order.Order.Builder)
+	return payload, nil
 }
 
 func u256String(value types.U256) string {
@@ -106,19 +105,6 @@ func decimalString(value types.Decimal) string {
 	return value.String()
 }
 
-func saltToJSON(value types.U256) (interface{}, error) {
-	if value.Int == nil {
-		return uint64(0), nil
-	}
-	if value.Int.Sign() < 0 {
-		return nil, fmt.Errorf("salt must be non-negative")
-	}
-	if value.Int.BitLen() > 53 {
-		return nil, fmt.Errorf("salt is too large (max 53 bits)")
-	}
-	return value.Int.Uint64(), nil
-}
-
 func normalizeOrderType(orderType clobtypes.OrderType, fallback clobtypes.OrderType) clobtypes.OrderType {
 	trimmed := strings.TrimSpace(string(orderType))
 	if trimmed == "" {
@@ -126,4 +112,23 @@ func normalizeOrderType(orderType clobtypes.OrderType, fallback clobtypes.OrderT
 	}
 	upper := strings.ToUpper(trimmed)
 	return clobtypes.OrderType(upper)
+}
+
+// padBytes32 pads a hex string to exactly 32 bytes (right-aligned).
+// Returns the zero bytes32 representation for empty or invalid input.
+func padBytes32(hexStr string) string {
+	zeroBytes32 := "0x0000000000000000000000000000000000000000000000000000000000000000"
+	if hexStr == "" {
+		return zeroBytes32
+	}
+	if len(hexStr) > 2 && hexStr[:2] == "0x" {
+		b, err := hexutil.Decode(hexStr)
+		if err != nil || len(b) > 32 {
+			return zeroBytes32
+		}
+		var padded [32]byte
+		copy(padded[32-len(b):], b)
+		return hexutil.Encode(padded[:])
+	}
+	return zeroBytes32
 }

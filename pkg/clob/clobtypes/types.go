@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
 )
@@ -328,7 +329,7 @@ type (
 	}
 	PricesHistoryResponse []PriceHistoryPoint
 	OrderResponse         struct {
-		ID           string `json:"orderID"`
+		ID           string `json:"id"`
 		Status       string `json:"status"`
 		AssetID      string `json:"asset_id,omitempty"`
 		Market       string `json:"market,omitempty"`
@@ -475,20 +476,23 @@ type (
 		Size  string `json:"size"`
 	}
 
+	// Order represents a signed order. Note: JSON tags are for internal serialization only.
+	// The API wire format uses camelCase keys (salt, maker, signer, tokenId, makerAmount,
+	// takerAmount, expiration, side, signatureType, timestamp, metadata, builder).
+	// Expiration is transmitted to the API but NOT part of the EIP-712 signed payload.
 	Order struct {
-		// Define order fields
 		Salt          types.U256    `json:"salt"`
 		Signer        types.Address `json:"signer"`
 		Maker         types.Address `json:"maker"`
-		Taker         types.Address `json:"taker"`
 		TokenID       types.U256    `json:"token_id"`
 		MakerAmount   types.Decimal `json:"maker_amount"`
 		TakerAmount   types.Decimal `json:"taker_amount"`
 		Expiration    types.U256    `json:"expiration"`
-		Side          string        `json:"side"` // BUY/SELL
-		FeeRateBps    types.Decimal `json:"fee_rate_bps"`
-		Nonce         types.U256    `json:"nonce"`
-		SignatureType *int          `json:"signature_type,omitempty"` // 0=EOA, 1=Proxy, 2=Safe
+		Side          string        `json:"side"`                       // BUY/SELL
+		SignatureType *int          `json:"signature_type,omitempty"`   // 0=EOA, 1=Proxy, 2=Safe, 3=Poly1271
+		Timestamp     int64         `json:"timestamp,omitempty"`        // ms since epoch
+		Metadata      string        `json:"metadata,omitempty"`         // 0x-prefixed bytes32 hex
+		Builder       string        `json:"builder,omitempty"`          // 0x-prefixed bytes32 hex builder code
 	}
 
 	PriceHistoryPoint struct {
@@ -546,26 +550,26 @@ type (
 	}
 
 	Earning struct {
-		AssetAddress string `json:"asset_address"`
-		Earnings     string `json:"earnings"`
-		AssetRate    string `json:"asset_rate"`
+		AssetAddress string        `json:"asset_address"`
+		Earnings     EarningsFloat `json:"earnings"`
+		AssetRate    EarningsFloat `json:"asset_rate"`
 	}
 
 	UserEarning struct {
-		Date         string `json:"date"`
-		ConditionID  string `json:"condition_id"`
-		AssetAddress string `json:"asset_address"`
-		MakerAddress string `json:"maker_address"`
-		Earnings     string `json:"earnings"`
-		AssetRate    string `json:"asset_rate"`
+		Date         string        `json:"date"`
+		ConditionID  string        `json:"condition_id"`
+		AssetAddress string        `json:"asset_address"`
+		MakerAddress string        `json:"maker_address"`
+		Earnings     EarningsFloat `json:"earnings"`
+		AssetRate    EarningsFloat `json:"asset_rate"`
 	}
 
 	TotalUserEarning struct {
-		Date         string  `json:"date"`
-		AssetAddress string  `json:"asset_address"`
-		MakerAddress string  `json:"maker_address"`
-		Earnings     float64 `json:"earnings"`
-		AssetRate    float64 `json:"asset_rate"`
+		Date         string        `json:"date"`
+		AssetAddress string        `json:"asset_address"`
+		MakerAddress string        `json:"maker_address"`
+		Earnings     EarningsFloat `json:"earnings"`
+		AssetRate    EarningsFloat `json:"asset_rate"`
 	}
 
 	UserRewardsEarning struct {
@@ -627,6 +631,51 @@ type (
 		Type   string `json:"type"`
 	}
 )
+
+// EarningsFloat handles earnings values that may be either a JSON number or string.
+type EarningsFloat float64
+
+func (e *EarningsFloat) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return nil
+	}
+	var f float64
+	if err := json.Unmarshal(trimmed, &f); err == nil {
+		*e = EarningsFloat(f)
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(trimmed, &s); err != nil {
+		return err
+	}
+	parsed, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return fmt.Errorf("invalid earnings value %q: %w", s, err)
+	}
+	*e = EarningsFloat(parsed)
+	return nil
+}
+
+// TimeResponseUnmarshalJSON handles both plain integer (V1) and object (V2) time responses.
+func (t *TimeResponse) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return nil
+	}
+	var ts int64
+	if err := json.Unmarshal(trimmed, &ts); err == nil {
+		t.Timestamp = ts
+		return nil
+	}
+	type timeResponseAlias TimeResponse
+	var alias timeResponseAlias
+	if err := json.Unmarshal(trimmed, &alias); err != nil {
+		return err
+	}
+	*t = TimeResponse(alias)
+	return nil
+}
 
 // PricesHistoryResponse supports both legacy array responses and the current
 // object-wrapped form returned by the API (e.g. {"history":[...]}).

@@ -47,6 +47,8 @@ type Client interface {
 	Events(ctx context.Context, req *EventsRequest) ([]Event, error)
 	// EventsAll automatically iterates through all pages to retrieve all available events.
 	EventsAll(ctx context.Context, req *EventsRequest) ([]Event, error)
+	// EventsKeyset retrieves a cursor-based paginated list of events using keyset pagination.
+	EventsKeyset(ctx context.Context, req *EventsRequest) ([]Event, error)
 	// EventByID retrieves a specific event by its ID.
 	EventByID(ctx context.Context, req *EventByIDRequest) (*Event, error)
 	// EventBySlug retrieves a specific event by its URL slug.
@@ -60,6 +62,8 @@ type Client interface {
 	Markets(ctx context.Context, req *MarketsRequest) ([]Market, error)
 	// MarketsAll automatically iterates through all pages to retrieve all available markets.
 	MarketsAll(ctx context.Context, req *MarketsRequest) ([]Market, error)
+	// MarketsKeyset retrieves a cursor-based paginated list of markets using keyset pagination.
+	MarketsKeyset(ctx context.Context, req *MarketsRequest) ([]Market, error)
 	// MarketByID retrieves a specific market by its ID.
 	MarketByID(ctx context.Context, req *MarketByIDRequest) (*Market, error)
 	// MarketBySlug retrieves a specific market by its URL slug.

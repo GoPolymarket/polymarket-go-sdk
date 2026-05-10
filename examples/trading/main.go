@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 
@@ -53,13 +52,11 @@ func main() {
 	// Note: This requires valid TokenID and sufficient balance/allowance to succeed on server
 	order := &clobtypes.Order{
 		Maker:       types.Address(signer.Address()),
-		Taker:       common.HexToAddress("0x0000000000000000000000000000000000000000"), // Open order
-		TokenID:     types.U256{Int: big.NewInt(123456789)},                            // Dummy Token ID
+		TokenID:     types.U256{Int: big.NewInt(123456789)}, // Dummy Token ID
 		MakerAmount: decimal.NewFromFloat(10.0),
 		TakerAmount: decimal.NewFromFloat(5.0),
 		Side:        "BUY",
-		FeeRateBps:  decimal.NewFromInt(0),
-		Nonce:       types.U256{Int: big.NewInt(time.Now().Unix())},
+		Timestamp:   time.Now().UnixMilli(),
 	}
 
 	fmt.Println("Signing and posting order...")

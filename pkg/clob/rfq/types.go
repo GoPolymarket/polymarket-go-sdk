@@ -106,14 +106,14 @@ type RFQAcceptRequest struct {
 	TokenID     string `json:"tokenId,omitempty"`
 	Maker       string `json:"maker,omitempty"`
 	Signer      string `json:"signer,omitempty"`
-	Taker       string `json:"taker,omitempty"`
-	Nonce       string `json:"nonce,omitempty"`
 	Expiration  string `json:"expiration,omitempty"`
 	Side        string `json:"side,omitempty"`
-	FeeRateBps  string `json:"feeRateBps,omitempty"`
 	Signature   string `json:"signature,omitempty"`
 	Salt        string `json:"salt,omitempty"`
 	Owner       string `json:"owner,omitempty"`
+	Timestamp   int64  `json:"timestamp,omitempty"`
+	Metadata    string `json:"metadata,omitempty"`
+	Builder     string `json:"builder,omitempty"`
 }
 
 type RFQApproveQuote struct {
@@ -125,14 +125,14 @@ type RFQApproveQuote struct {
 	TokenID     string `json:"tokenId,omitempty"`
 	Maker       string `json:"maker,omitempty"`
 	Signer      string `json:"signer,omitempty"`
-	Taker       string `json:"taker,omitempty"`
-	Nonce       string `json:"nonce,omitempty"`
 	Expiration  string `json:"expiration,omitempty"`
 	Side        string `json:"side,omitempty"`
-	FeeRateBps  string `json:"feeRateBps,omitempty"`
 	Signature   string `json:"signature,omitempty"`
 	Salt        string `json:"salt,omitempty"`
 	Owner       string `json:"owner,omitempty"`
+	Timestamp   int64  `json:"timestamp,omitempty"`
+	Metadata    string `json:"metadata,omitempty"`
+	Builder     string `json:"builder,omitempty"`
 }
 
 // Response types.

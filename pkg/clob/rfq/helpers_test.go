@@ -73,14 +73,11 @@ func TestBuildRFQAcceptRequestFromSignedOrder(t *testing.T) {
 			Salt:        types.U256{Int: big.NewInt(1)},
 			Maker:       common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			Signer:      common.HexToAddress("0x0000000000000000000000000000000000000002"),
-			Taker:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
 			TokenID:     types.U256{Int: big.NewInt(123)},
 			MakerAmount: decimal.NewFromInt(100),
 			TakerAmount: decimal.NewFromInt(50),
 			Side:        "BUY",
 			Expiration:  types.U256{Int: big.NewInt(0)},
-			FeeRateBps:  decimal.NewFromInt(0),
-			Nonce:       types.U256{Int: big.NewInt(10)},
 		},
 		Signature: "0xsig",
 		Owner:     "owner",
@@ -93,8 +90,8 @@ func TestBuildRFQAcceptRequestFromSignedOrder(t *testing.T) {
 	if req.RequestID != "req-1" || req.QuoteIDV2 != "quote-1" {
 		t.Fatalf("request/quote IDs mismatch")
 	}
-	if req.TokenID != "123" || req.Nonce != "10" {
-		t.Fatalf("order fields mismatch: token=%s nonce=%s", req.TokenID, req.Nonce)
+	if req.TokenID != "123" {
+		t.Fatalf("order fields mismatch: token=%s", req.TokenID)
 	}
 }
 
@@ -141,7 +138,6 @@ func TestBuildRFQAcceptRequest_NilTokenID(t *testing.T) {
 	signed := &clobtypes.SignedOrder{
 		Order: clobtypes.Order{
 			TokenID: types.U256{},
-			Nonce:   types.U256{Int: big.NewInt(1)},
 			Salt:    types.U256{Int: big.NewInt(1)},
 		},
 		Signature: "sig",
@@ -159,14 +155,11 @@ func TestBuildRFQAcceptRequest_NilExpiration(t *testing.T) {
 			Salt:        types.U256{Int: big.NewInt(1)},
 			Maker:       common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			Signer:      common.HexToAddress("0x0000000000000000000000000000000000000002"),
-			Taker:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
 			TokenID:     types.U256{Int: big.NewInt(123)},
 			MakerAmount: decimal.NewFromInt(100),
 			TakerAmount: decimal.NewFromInt(50),
 			Side:        "BUY",
 			Expiration:  types.U256{}, // nil Int
-			FeeRateBps:  decimal.NewFromInt(0),
-			Nonce:       types.U256{Int: big.NewInt(10)},
 		},
 		Signature: "0xsig",
 		Owner:     "owner",
@@ -186,14 +179,11 @@ func TestBuildRFQApproveQuoteFromSignedOrder(t *testing.T) {
 			Salt:        types.U256{Int: big.NewInt(1)},
 			Maker:       common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			Signer:      common.HexToAddress("0x0000000000000000000000000000000000000002"),
-			Taker:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
 			TokenID:     types.U256{Int: big.NewInt(123)},
 			MakerAmount: decimal.NewFromInt(100),
 			TakerAmount: decimal.NewFromInt(50),
 			Side:        "BUY",
 			Expiration:  types.U256{Int: big.NewInt(999)},
-			FeeRateBps:  decimal.NewFromInt(0),
-			Nonce:       types.U256{Int: big.NewInt(10)},
 		},
 		Signature: "0xsig",
 		Owner:     "owner",
@@ -241,19 +231,17 @@ func TestBuildRFQApproveQuote_EmptyOwner(t *testing.T) {
 	}
 }
 
-func TestBuildRFQApproveQuote_NilNonce(t *testing.T) {
+func TestBuildRFQApproveQuote_MissingTokenID(t *testing.T) {
 	signed := &clobtypes.SignedOrder{
 		Order: clobtypes.Order{
-			TokenID: types.U256{Int: big.NewInt(1)},
-			Nonce:   types.U256{},
-			Salt:    types.U256{Int: big.NewInt(1)},
+			Salt: types.U256{Int: big.NewInt(1)},
 		},
 		Signature: "sig",
 		Owner:     "owner",
 	}
 	_, err := BuildRFQApproveQuoteFromSignedOrder("r1", "q1", signed)
 	if err == nil {
-		t.Fatal("expected error for nil nonce")
+		t.Fatal("expected error for missing token ID")
 	}
 }
 

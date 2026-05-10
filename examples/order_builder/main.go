@@ -42,7 +42,6 @@ func main() {
 		Side("BUY").
 		Price(0.5).
 		Size(100.0).
-		FeeRateBps(0).
 		TickSize(0.01).
 		UseProxy(). // Important: Use Proxy Wallet
 		Build()
@@ -56,13 +55,15 @@ func main() {
 	fmt.Printf("Salt: %s\n", order.Salt.Int.String())
 	fmt.Printf("Signer: %s\n", order.Signer.String())
 	fmt.Printf("Maker: %s\n", order.Maker.String())
-	fmt.Printf("Taker: %s\n", order.Taker.String())
 	fmt.Printf("TokenID: %s\n", order.TokenID.Int.String())
 	fmt.Printf("MakerAmount: %s\n", order.MakerAmount.String())
 	fmt.Printf("TakerAmount: %s\n", order.TakerAmount.String())
 	fmt.Printf("Expiration: %s\n", order.Expiration.Int.String())
 	fmt.Printf("Side: %s\n", order.Side)
 	fmt.Printf("SignatureType: %d\n", *order.SignatureType)
+	fmt.Printf("Timestamp: %d\n", order.Timestamp)
+	fmt.Printf("Metadata: %s\n", order.Metadata)
+	fmt.Printf("Builder: %s\n", order.Builder)
 
 	// Verify Maker matches Derived Proxy
 	if order.Maker != proxy {
