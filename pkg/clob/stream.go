@@ -1,6 +1,6 @@
 package clob
 
-import "github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+import "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 
 import "context"
 

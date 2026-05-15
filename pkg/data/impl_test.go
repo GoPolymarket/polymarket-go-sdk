@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/transport"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"

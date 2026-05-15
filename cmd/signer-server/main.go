@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/auth"
 )
 
 // Request payload matching what the SDK sends

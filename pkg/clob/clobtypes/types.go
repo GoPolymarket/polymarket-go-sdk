@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 )
 
 // OrderType represents time-in-force / order type values.

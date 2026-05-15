@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"strings"
 
-	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/pkg/errors"
+	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/logger"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/logger"
 	"github.com/gorilla/websocket"
 )
 

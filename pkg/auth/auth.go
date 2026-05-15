@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/pkg/errors"
+	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"

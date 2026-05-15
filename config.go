@@ -3,9 +3,9 @@ package polymarket
 import (
 	"time"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/ws"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/rtds"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/ws"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/rtds"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/transport"
 )
 
 // BaseURLs defines per-service base endpoints.
@@ -44,7 +44,7 @@ func DefaultConfig() Config {
 			RTDS:     "wss://ws-live-data.polymarket.com",
 			CTF:      "",
 		},
-		UserAgent:     "github.com/GoPolymarket/polymarket-go-sdk",
+		UserAgent:     "github.com/GoPolymarket/polymarket-go-sdk/v2",
 		Timeout:       30 * time.Second,
 		UseServerTime: false,
 		// Keep legacy env-driven behavior for backward compatibility at the root client level.

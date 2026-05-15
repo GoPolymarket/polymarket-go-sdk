@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 )
 
 // MockDoer implements Doer for testing

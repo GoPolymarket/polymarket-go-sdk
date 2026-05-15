@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/pkg/errors"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/transport"
+	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/errors"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/transport"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"

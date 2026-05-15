@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/auth"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -67,6 +67,21 @@ func signOrderWithCreds(signer auth.Signer, apiKey *auth.APIKey, order *clobtype
 		return nil, fmt.Errorf("order is required")
 	}
 
+	side := strings.ToUpper(strings.TrimSpace(order.Side))
+	if side != "BUY" && side != "SELL" {
+		return nil, fmt.Errorf("order side must be BUY or SELL, got %q", order.Side)
+	}
+	order.Side = side
+	if order.TokenID.Int == nil || order.TokenID.Int.Sign() == 0 {
+		return nil, fmt.Errorf("token_id is required and must be non-zero")
+	}
+	if order.MakerAmount.BigInt() == nil || order.MakerAmount.BigInt().Sign() <= 0 {
+		return nil, fmt.Errorf("maker_amount must be positive")
+	}
+	if order.TakerAmount.BigInt() == nil || order.TakerAmount.BigInt().Sign() <= 0 {
+		return nil, fmt.Errorf("taker_amount must be positive")
+	}
+
 	sigTypeVal := int(auth.SignatureEOA)
 	if order.SignatureType != nil {
 		sigTypeVal = *order.SignatureType
@@ -92,6 +107,10 @@ func signOrderWithCreds(signer auth.Signer, apiKey *auth.APIKey, order *clobtype
 			}
 			order.Maker = maker
 		}
+	}
+
+	if order.Maker == (types.Address{}) {
+		return nil, fmt.Errorf("maker address cannot be zero; ensure signer is properly initialized")
 	}
 
 	domain := &apitypes.TypedDataDomain{
@@ -124,7 +143,7 @@ func signOrderWithCreds(signer auth.Signer, apiKey *auth.APIKey, order *clobtype
 	}
 
 	sideInt := 0
-	if strings.ToUpper(order.Side) == "SELL" {
+	if side == "SELL" {
 		sideInt = 1
 	}
 

@@ -1,13 +1,13 @@
 package clob
 
-import "github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+import "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 )
 
 func buildOrderPayload(order *clobtypes.SignedOrder) (map[string]interface{}, error) {

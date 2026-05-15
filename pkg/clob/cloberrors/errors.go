@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/pkg/errors"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/errors"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 )
 
 // FromTypeErr maps a generic types.Error (from transport layer) to a specific

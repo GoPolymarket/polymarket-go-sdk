@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	polymarket "github.com/GoPolymarket/polymarket-go-sdk"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob"
+	polymarket "github.com/GoPolymarket/polymarket-go-sdk/v2"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/auth"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob"
 	
-"github.com/GoPolymarket/polymarket-go-sdk/pkg/gamma"
+"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/gamma"
 )
 
 func main() {

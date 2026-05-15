@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/auth"
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/auth"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 )
 
 func (c *clientImpl) BalanceAllowance(ctx context.Context, req *clobtypes.BalanceAllowanceRequest) (clobtypes.BalanceAllowanceResponse, error) {
@@ -258,6 +258,9 @@ func (c *clientImpl) DeleteAPIKey(ctx context.Context, id string) (clobtypes.API
 	return resp, mapError(err)
 }
 
+// DeriveAPIKey retrieves an existing API key derived from the signer's wallet.
+// The API key must have been previously created via CreateAPIKey or CreateOrDeriveAPIKey.
+// For first-time setup, use CreateOrDeriveAPIKey which creates a key if one does not exist.
 func (c *clientImpl) DeriveAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
 	nonce := int64(0)
 	if c.authNonce != nil {
@@ -267,6 +270,9 @@ func (c *clientImpl) DeriveAPIKey(ctx context.Context) (clobtypes.APIKeyResponse
 }
 
 func (c *clientImpl) DeriveAPIKeyWithNonce(ctx context.Context, nonce int64) (clobtypes.APIKeyResponse, error) {
+	if c.signer == nil {
+		return clobtypes.APIKeyResponse{}, auth.ErrMissingSigner
+	}
 	var resp clobtypes.APIKeyResponse
 	headersRaw, err := auth.BuildL1Headers(c.signer, 0, nonce)
 	if err != nil {
@@ -282,6 +288,9 @@ func (c *clientImpl) DeriveAPIKeyWithNonce(ctx context.Context, nonce int64) (cl
 	return resp, mapError(err)
 }
 
+// CreateOrDeriveAPIKey is the recommended method for first-time API key setup.
+// It first attempts to create a new API key. If the key already exists, it
+// falls back to deriving the existing key.
 func (c *clientImpl) CreateOrDeriveAPIKey(ctx context.Context) (clobtypes.APIKeyResponse, error) {
 	nonce := int64(0)
 	if c.authNonce != nil {

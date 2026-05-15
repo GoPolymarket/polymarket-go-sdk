@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/clob/clobtypes"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 	"context"
 	"fmt"
 	"log"
 	"time"
 
-	polymarket "github.com/GoPolymarket/polymarket-go-sdk"
+	polymarket "github.com/GoPolymarket/polymarket-go-sdk/v2"
 	
 )
 

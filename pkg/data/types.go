@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoPolymarket/polymarket-go-sdk/pkg/types"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 
 	"github.com/ethereum/go-ethereum/common"
 )
