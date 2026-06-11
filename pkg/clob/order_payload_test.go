@@ -1,7 +1,7 @@
 package clob
 
 import (
-	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
+	"encoding/json"
 	"math/big"
 	"strings"
 	"testing"
@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
 )
 
@@ -56,6 +57,45 @@ func TestBuildOrderPayloadCasingAndOptions(t *testing.T) {
 	}
 	if orderMap["signature"] != "0xsig" {
 		t.Fatalf("signature mismatch: got %v", orderMap["signature"])
+	}
+}
+
+func TestBuildOrderPayloadPoly1271Compatibility(t *testing.T) {
+	sigType := 3
+	order := clobtypes.SignedOrder{
+		Order: clobtypes.Order{
+			Salt:          types.U256{Int: big.NewInt(123)},
+			Maker:         common.HexToAddress("0x9c90cad21cb08320Fb224EAb032dDAE311c017Ef"),
+			Signer:        common.HexToAddress("0x9c90cad21cb08320Fb224EAb032dDAE311c017Ef"),
+			TokenID:       types.U256{Int: big.NewInt(123)},
+			MakerAmount:   decimal.NewFromInt(100),
+			TakerAmount:   decimal.NewFromInt(50),
+			Side:          "BUY",
+			Expiration:    types.U256{Int: big.NewInt(0)},
+			SignatureType: &sigType,
+			Timestamp:     1700000000123,
+		},
+		Signature: "0xsig",
+		Owner:     "builder-owner",
+		OrderType: clobtypes.OrderTypeGTC,
+	}
+
+	payload, err := buildOrderPayload(&order)
+	if err != nil {
+		t.Fatalf("buildOrderPayload failed: %v", err)
+	}
+	if got := payload["deferExec"]; got != false {
+		t.Fatalf("deferExec mismatch: got %v", got)
+	}
+	orderMap, ok := payload["order"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("order payload missing order map")
+	}
+	if got := orderMap["salt"]; got != json.Number("123") {
+		t.Fatalf("salt mismatch: got %#v", got)
+	}
+	if got := orderMap["timestamp"]; got != "1700000000123" {
+		t.Fatalf("timestamp mismatch: got %#v", got)
 	}
 }
 
