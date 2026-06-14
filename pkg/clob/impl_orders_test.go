@@ -238,6 +238,47 @@ func TestSignOrderDefaults(t *testing.T) {
 	}
 }
 
+func TestSignOrderPoly1271WrappedSignature(t *testing.T) {
+	signer, err := auth.NewPrivateKeySigner("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", 137)
+	if err != nil {
+		t.Fatalf("failed to create signer: %v", err)
+	}
+	apiKey := &auth.APIKey{Key: "api-key", Secret: "secret", Passphrase: "passphrase"}
+
+	tokenID, ok := new(big.Int).SetString("1000000000000000000000000000000000000000000000000000000000000001", 10)
+	if !ok {
+		t.Fatal("invalid token id fixture")
+	}
+	funder := common.HexToAddress("0x9c90cad21cb08320Fb224EAb032dDAE311c017Ef")
+	sigType := int(auth.SignaturePoly1271)
+
+	order := &clobtypes.Order{
+		Salt:          types.U256{Int: big.NewInt(123)},
+		Maker:         funder,
+		Signer:        funder,
+		TokenID:       types.U256{Int: tokenID},
+		MakerAmount:   decimal.NewFromInt(9878920),
+		TakerAmount:   decimal.NewFromInt(20120000),
+		Expiration:    types.U256{Int: big.NewInt(1700000000)},
+		Side:          "BUY",
+		SignatureType: &sigType,
+		Timestamp:     1700000000123,
+	}
+
+	signed, err := SignOrder(signer, apiKey, order)
+	if err != nil {
+		t.Fatalf("SignOrder failed: %v", err)
+	}
+
+	expectedSignature := "0x2bc3ab0a90b33458c5dfb95b5ee707f1db927a7535e2b35b3d4f48f3bdc1e810208b6afee04445c46a09f0791522d1176eba4b0128d2d98d065780c14e68b6281c3264e159346253e26a64e00b69032db0e7d32f94628de3e6eecb50304d7af3d21c202ba2e918b30e52a234894cb7753acfda24411b5b40ea8b64f15a34ac32154f726465722875696e743235362073616c742c61646472657373206d616b65722c61646472657373207369676e65722c75696e7432353620746f6b656e49642c75696e74323536206d616b6572416d6f756e742c75696e743235362074616b6572416d6f756e742c75696e743820736964652c75696e7438207369676e6174757265547970652c75696e743235362074696d657374616d702c62797465733332206d657461646174612c62797465733332206275696c6465722900ba"
+	if signed.Signature != expectedSignature {
+		t.Fatalf("signature mismatch:\ngot  %s\nwant %s", signed.Signature, expectedSignature)
+	}
+	if signed.Order.Signer != funder {
+		t.Fatalf("signer mismatch: got %s want %s", signed.Order.Signer.Hex(), funder.Hex())
+	}
+}
+
 func TestPostOrders_BatchSizeValidation(t *testing.T) {
 	ctx := context.Background()
 	client := &clientImpl{

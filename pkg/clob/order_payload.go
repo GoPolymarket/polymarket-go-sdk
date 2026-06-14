@@ -1,13 +1,13 @@
 package clob
 
-import "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
-
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/clob/clobtypes"
 	"github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 func buildOrderPayload(order *clobtypes.SignedOrder) (map[string]interface{}, error) {
@@ -33,6 +33,8 @@ func buildOrderPayload(order *clobtypes.SignedOrder) (map[string]interface{}, er
 	}
 	if order.DeferExec != nil {
 		payload["deferExec"] = *order.DeferExec
+	} else if isPoly1271SignedOrder(order) {
+		payload["deferExec"] = false
 	}
 	return payload, nil
 }
@@ -74,8 +76,15 @@ func orderWithSignature(order *clobtypes.SignedOrder) (map[string]interface{}, e
 		return nil, fmt.Errorf("invalid order side %q", order.Order.Side)
 	}
 
+	salt := interface{}(u256String(order.Order.Salt))
+	timestamp := interface{}(order.Order.Timestamp)
+	if sigType == 3 {
+		salt = json.Number(u256String(order.Order.Salt))
+		timestamp = fmt.Sprintf("%d", order.Order.Timestamp)
+	}
+
 	payload := map[string]interface{}{
-		"salt":          u256String(order.Order.Salt),
+		"salt":          salt,
 		"maker":         order.Order.Maker.Hex(),
 		"signer":        order.Order.Signer.Hex(),
 		"tokenId":       u256String(order.Order.TokenID),
@@ -88,10 +97,14 @@ func orderWithSignature(order *clobtypes.SignedOrder) (map[string]interface{}, e
 	}
 
 	// V2 fields - always include to match EIP-712 signed values
-	payload["timestamp"] = order.Order.Timestamp
+	payload["timestamp"] = timestamp
 	payload["metadata"] = padBytes32(order.Order.Metadata)
 	payload["builder"] = padBytes32(order.Order.Builder)
 	return payload, nil
+}
+
+func isPoly1271SignedOrder(order *clobtypes.SignedOrder) bool {
+	return order != nil && order.Order.SignatureType != nil && *order.Order.SignatureType == 3
 }
 
 func u256String(value types.U256) string {

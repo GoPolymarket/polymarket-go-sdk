@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
@@ -19,12 +20,12 @@ type OrderBuilder struct {
 	client Client
 	signer auth.Signer
 
-	tokenID    string
-	side       string
-	price      decimal.Decimal
-	size       decimal.Decimal
-	tickSize   float64
-	orderType  clobtypes.OrderType
+	tokenID   string
+	side      string
+	price     decimal.Decimal
+	size      decimal.Decimal
+	tickSize  float64
+	orderType clobtypes.OrderType
 
 	// Optional overrides
 	maker         *common.Address
@@ -356,10 +357,18 @@ func (b *OrderBuilder) BuildMarketWithContext(ctx context.Context) (*clobtypes.S
 	if err != nil {
 		return nil, err
 	}
+	orderSigner := b.signer.Address()
+	timestamp := b.timestamp
+	if sigType == int(auth.SignaturePoly1271) {
+		orderSigner = maker
+		if timestamp == 0 {
+			timestamp = time.Now().UnixMilli()
+		}
+	}
 
 	order := &clobtypes.Order{
 		Salt:          types.U256{Int: salt},
-		Signer:        b.signer.Address(),
+		Signer:        orderSigner,
 		Maker:         maker,
 		TokenID:       types.U256{Int: tokenIDInt},
 		MakerAmount:   types.Decimal(makerFixed),
@@ -367,7 +376,7 @@ func (b *OrderBuilder) BuildMarketWithContext(ctx context.Context) (*clobtypes.S
 		Expiration:    types.U256{Int: big.NewInt(0)},
 		Side:          side,
 		SignatureType: &sigType,
-		Timestamp:     b.timestamp,
+		Timestamp:     timestamp,
 		Metadata:      b.metadata,
 		Builder:       b.builder,
 	}
@@ -465,6 +474,14 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 	if err != nil {
 		return nil, err
 	}
+	orderSigner := b.signer.Address()
+	timestamp := b.timestamp
+	if sigType == int(auth.SignaturePoly1271) {
+		orderSigner = maker
+		if timestamp == 0 {
+			timestamp = time.Now().UnixMilli()
+		}
+	}
 
 	expiration := big.NewInt(0)
 	if b.expiration != nil {
@@ -476,7 +493,7 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 
 	return &clobtypes.Order{
 		Salt:          types.U256{Int: salt},
-		Signer:        b.signer.Address(),
+		Signer:        orderSigner,
 		Maker:         maker,
 		TokenID:       types.U256{Int: tokenIDInt},
 		MakerAmount:   types.Decimal(makerFixed),
@@ -484,7 +501,7 @@ func (b *OrderBuilder) buildLimit(ctx context.Context) (*clobtypes.Order, error)
 		Expiration:    types.U256{Int: expiration},
 		Side:          side,
 		SignatureType: &sigType,
-		Timestamp:     b.timestamp,
+		Timestamp:     timestamp,
 		Metadata:      b.metadata,
 		Builder:       b.builder,
 	}, nil
