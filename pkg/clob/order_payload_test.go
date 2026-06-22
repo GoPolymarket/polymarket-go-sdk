@@ -1,7 +1,6 @@
 package clob
 
 import (
-	"encoding/json"
 	"math/big"
 	"strings"
 	"testing"
@@ -91,7 +90,7 @@ func TestBuildOrderPayloadPoly1271Compatibility(t *testing.T) {
 	if !ok {
 		t.Fatalf("order payload missing order map")
 	}
-	if got := orderMap["salt"]; got != json.Number("123") {
+	if got := orderMap["salt"]; got != "123" {
 		t.Fatalf("salt mismatch: got %#v", got)
 	}
 	if got := orderMap["timestamp"]; got != "1700000000123" {

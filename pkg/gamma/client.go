@@ -19,6 +19,8 @@ type Client interface {
 
 	// Teams retrieves a list of teams associated with sports markets.
 	Teams(ctx context.Context, req *TeamsRequest) ([]Team, error)
+	// TeamByID retrieves a specific team by its ID.
+	TeamByID(ctx context.Context, id string) (*Team, error)
 	// Sports retrieves metadata about supported sport categories.
 	Sports(ctx context.Context) ([]SportsMetadata, error)
 	// SportsMarketTypes lists the types of prediction markets available for sports.

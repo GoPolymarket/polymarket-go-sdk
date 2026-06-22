@@ -457,3 +457,61 @@ func (c *clientImpl) MarketTradesEvents(ctx context.Context, id string) (clobtyp
 	err := c.httpClient.Get(ctx, "/v1/market-trades-events/"+id, nil, &resp)
 	return resp, mapError(err)
 }
+
+func (c *clientImpl) ClobMarketInfo(ctx context.Context, conditionID string) (*clobtypes.ClobMarketDetails, error) {
+	var resp clobtypes.ClobMarketDetails
+	err := c.httpClient.Get(ctx, "/clob-markets/"+conditionID, nil, &resp)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &resp, nil
+}
+
+func (c *clientImpl) MarketByToken(ctx context.Context, tokenID string) (clobtypes.MarketByTokenResponse, error) {
+	var resp clobtypes.MarketByTokenResponse
+	err := c.httpClient.Get(ctx, "/markets-by-token/"+tokenID, nil, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) MarketsLiveActivity(ctx context.Context, req *clobtypes.LiveActivityRequest) (clobtypes.LiveActivityResponse, error) {
+	var resp clobtypes.LiveActivityResponse
+	err := c.httpClient.Post(ctx, "/markets/live-activity", req, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) MarketLiveActivity(ctx context.Context, conditionID string) (clobtypes.LiveActivityResponse, error) {
+	var resp clobtypes.LiveActivityResponse
+	err := c.httpClient.Get(ctx, "/markets/live-activity/"+conditionID, nil, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) BatchPricesHistory(ctx context.Context, req *clobtypes.BatchPricesHistoryRequest) (clobtypes.BatchPricesHistoryResponse, error) {
+	var resp clobtypes.BatchPricesHistoryResponse
+	err := c.httpClient.Post(ctx, "/batch-prices-history", req, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) OrderBooksQuery(ctx context.Context, req *clobtypes.BooksQueryRequest) (clobtypes.OrderBooksResponse, error) {
+	q := url.Values{}
+	if req != nil {
+		for _, id := range req.TokenIDs {
+			q.Add("token_id", id)
+		}
+	}
+	var resp clobtypes.OrderBooksResponse
+	err := c.httpClient.Get(ctx, "/books", q, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) NegRiskByPath(ctx context.Context, tokenID string) (clobtypes.NegRiskResponse, error) {
+	var resp clobtypes.NegRiskResponse
+	err := c.httpClient.Get(ctx, "/neg-risk/"+tokenID, nil, &resp)
+	return resp, mapError(err)
+}
+
+func (c *clientImpl) PutBalanceAllowance(ctx context.Context, req *clobtypes.PutBalanceAllowanceRequest) (clobtypes.BalanceAllowanceResponse, error) {
+	var resp clobtypes.BalanceAllowanceResponse
+	// PUT requests use CallWithHeaders to set the method
+	err := c.httpClient.Call(ctx, "PUT", "/balance-allowance", nil, req, &resp, nil)
+	return resp, mapError(err)
+}

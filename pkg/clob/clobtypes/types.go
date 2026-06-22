@@ -630,6 +630,68 @@ type (
 		APIKey string `json:"apiKey"`
 		Type   string `json:"type"`
 	}
+
+	// V2 market info types.
+	ClobMarketDetails struct {
+		GameStartTime      *string     `json:"gst"`
+		Rewards            interface{} `json:"r"`
+		Tokens             []ClobToken `json:"t"`
+		MinOrderSize       float64     `json:"mos"`
+		MinTickSize        float64     `json:"mts"`
+		MakerBaseFee       int64       `json:"mbf"`
+		TakerBaseFee       int64       `json:"tbf"`
+		RFQEnabled         bool        `json:"rfqe"`
+		TakerOrderDelay    bool        `json:"itode,omitempty"`
+		BlockaidCheck      bool        `json:"ibce"`
+		FeeDetails         *FeeDetails `json:"fd,omitempty"`
+		MinOrderAgeSeconds int         `json:"oas"`
+	}
+	ClobToken struct {
+		TokenID string `json:"t"`
+		Outcome string `json:"o"`
+	}
+	FeeDetails struct {
+		Rate       *float64 `json:"r"`
+		Exponent   *float64 `json:"e"`
+		TakersOnly *bool    `json:"to"`
+	}
+
+	MarketByTokenResponse Market
+
+	LiveActivityRequest struct {
+		ConditionIDs []string `json:"condition_ids"`
+	}
+	LiveActivityResponse []LiveActivityItem
+	LiveActivityItem struct {
+		ConditionID string   `json:"condition_id"`
+		Question    string   `json:"question"`
+		Outcomes    []string `json:"outcomes,omitempty"`
+	}
+
+	BatchPricesHistoryRequest struct {
+		Markets  []string `json:"markets"`
+		StartTs  *float64 `json:"start_ts,omitempty"`
+		EndTs    *float64 `json:"end_ts,omitempty"`
+		Interval string   `json:"interval,omitempty"`
+		Fidelity int      `json:"fidelity,omitempty"`
+	}
+	BatchPricesHistoryResponse struct {
+		History map[string][]MarketPrice `json:"history"`
+	}
+	MarketPrice struct {
+		T int64   `json:"t"`
+		P float64 `json:"p"`
+	}
+
+	BooksQueryRequest struct {
+		TokenIDs []string `json:"token_ids"`
+	}
+
+	PutBalanceAllowanceRequest struct {
+		AssetType     string `json:"asset_type"`
+		TokenID       string `json:"token_id,omitempty"`
+		SignatureType *int   `json:"signature_type,omitempty"`
+	}
 )
 
 // EarningsFloat handles earnings values that may be either a JSON number or string.

@@ -213,6 +213,31 @@ type (
 	BuildersVolumeRequest struct {
 		TimePeriod *TimePeriod
 	}
+
+	// V2 request/response types.
+	MarketPositionsRequest struct {
+		Market        common.Hash
+		User          *common.Address
+		Status        *string
+		SortBy        *string
+		SortDirection *SortDirection
+		Limit         *int
+		Offset        *int
+	}
+	ActivityCombosRequest struct {
+		User          common.Address
+		Limit         *int
+		Offset        *int
+		SortBy        *ActivitySortBy
+		SortDirection *SortDirection
+	}
+	PositionsCombosRequest struct {
+		User          common.Address
+		Limit         *int
+		Offset        *int
+		SortBy        *PositionSortBy
+		SortDirection *SortDirection
+	}
 )
 
 // BoundedIntError indicates a numeric parameter is outside allowed bounds.
@@ -510,6 +535,35 @@ type (
 	LeaderboardResponse         []TraderLeaderboardEntry
 	BuildersLeaderboardResponse []BuilderLeaderboardEntry
 	BuildersVolumeResponse      []BuilderVolumeEntry
+
+	// V2 response types.
+	MarketPositionsResponse []MarketPositionGroup
+	MarketPositionGroup struct {
+		Token     string             `json:"token"`
+		Positions []MarketPositionV1 `json:"positions"`
+	}
+	MarketPositionV1 struct {
+		ProxyWallet   common.Address `json:"proxyWallet"`
+		Name          string         `json:"name"`
+		ProfileImage  string         `json:"profileImage"`
+		Verified      bool           `json:"verified"`
+		Asset         string         `json:"asset"`
+		ConditionID   common.Hash    `json:"conditionId"`
+		AvgPrice      float64        `json:"avgPrice"`
+		Size          float64        `json:"size"`
+		CurrPrice     float64        `json:"currPrice"`
+		CurrentValue  float64        `json:"currentValue"`
+		CashPnl       float64        `json:"cashPnl"`
+		TotalBought   float64        `json:"totalBought"`
+		RealizedPnl   float64        `json:"realizedPnl"`
+		TotalPnl      float64        `json:"totalPnl"`
+		Outcome       string         `json:"outcome"`
+		OutcomeIndex  int            `json:"outcomeIndex"`
+	}
+	ActivityCombosResponse  []ActivityCombo
+	ActivityCombo           Activity // Combo activity uses the same structure as regular activity
+	PositionsCombosResponse []PositionCombo
+	PositionCombo           Position // Combo positions use similar structure
 )
 
 func bytesTrimSpace(data []byte) []byte {

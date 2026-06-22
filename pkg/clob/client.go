@@ -236,6 +236,31 @@ type Client interface {
 	// MarketTradesEvents retrieves a stream of recent trade events for a market.
 	MarketTradesEvents(ctx context.Context, id string) (clobtypes.MarketTradesEventsResponse, error)
 
+	// -- V2 Market Info --
+
+	// ClobMarketInfo returns CLOB-level parameters for a market (tokens, fees, tick size, RFQ status, etc.).
+	ClobMarketInfo(ctx context.Context, conditionID string) (*clobtypes.ClobMarketDetails, error)
+	// MarketByToken returns the parent market for a given token ID.
+	MarketByToken(ctx context.Context, tokenID string) (clobtypes.MarketByTokenResponse, error)
+	// MarketsLiveActivity returns minimal market info for multiple condition IDs (batch).
+	MarketsLiveActivity(ctx context.Context, req *clobtypes.LiveActivityRequest) (clobtypes.LiveActivityResponse, error)
+	// MarketLiveActivity returns minimal market info for a single condition ID.
+	MarketLiveActivity(ctx context.Context, conditionID string) (clobtypes.LiveActivityResponse, error)
+	// BatchPricesHistory returns historical price data for multiple markets in a single request.
+	BatchPricesHistory(ctx context.Context, req *clobtypes.BatchPricesHistoryRequest) (clobtypes.BatchPricesHistoryResponse, error)
+
+	// -- Order Book (Query Variants) --
+
+	// OrderBooksQuery returns multiple order books via query parameters.
+	OrderBooksQuery(ctx context.Context, req *clobtypes.BooksQueryRequest) (clobtypes.OrderBooksResponse, error)
+	// NegRiskByPath returns the negative risk flag for a token ID via path parameter.
+	NegRiskByPath(ctx context.Context, tokenID string) (clobtypes.NegRiskResponse, error)
+
+	// -- Balance (Put Variant) --
+
+	// PutBalanceAllowance forces an update of the balance and allowances from the blockchain.
+	PutBalanceAllowance(ctx context.Context, req *clobtypes.PutBalanceAllowanceRequest) (clobtypes.BalanceAllowanceResponse, error)
+
 	// -- Sub-Client Accessors --
 
 	// RFQ returns the Request For Quote sub-client.

@@ -17,4 +17,10 @@ type Client interface {
 	Leaderboard(ctx context.Context, req *LeaderboardRequest) (LeaderboardResponse, error)
 	BuildersLeaderboard(ctx context.Context, req *BuildersLeaderboardRequest) (BuildersLeaderboardResponse, error)
 	BuildersVolume(ctx context.Context, req *BuildersVolumeRequest) (BuildersVolumeResponse, error)
+
+	// V2 endpoints
+	AccountingSnapshot(ctx context.Context) ([]byte, error)
+	MarketPositions(ctx context.Context, req *MarketPositionsRequest) (MarketPositionsResponse, error)
+	ActivityCombos(ctx context.Context, req *ActivityCombosRequest) (ActivityCombosResponse, error)
+	PositionsCombos(ctx context.Context, req *PositionsCombosRequest) (PositionsCombosResponse, error)
 }

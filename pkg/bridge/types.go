@@ -8,6 +8,22 @@ type (
 	StatusRequest struct {
 		Address string `json:"address"`
 	}
+	BridgeQuoteRequest struct {
+		FromChainID   string `json:"fromChainId"`
+		ToChainID     string `json:"toChainId"`
+		FromTokenAddr string `json:"fromTokenAddress"`
+		ToTokenAddr   string `json:"toTokenAddress"`
+		FromAmountRaw string `json:"fromAmountRaw"`
+		FromAddress   string `json:"fromAddress"`
+	}
+	WithdrawAddressRequest struct {
+		FromChainID   string `json:"fromChainId"`
+		ToChainID     string `json:"toChainId"`
+		FromTokenAddr string `json:"fromTokenAddress"`
+		ToTokenAddr   string `json:"toTokenAddress"`
+		AmountRaw     string `json:"amountRaw"`
+		Recipient     string `json:"recipient"`
+	}
 )
 
 // Response types.
@@ -39,6 +55,17 @@ type (
 	}
 	StatusResponse struct {
 		Transactions []DepositTransaction `json:"transactions"`
+	}
+	BridgeQuoteResponse struct {
+		EstimatedFees struct {
+			FromAmount string `json:"fromAmount"`
+			ToAmount   string `json:"toAmount"`
+		} `json:"estimatedFees"`
+		QuoteID string `json:"quoteId"`
+	}
+	WithdrawAddressResponse struct {
+		Address DepositAddresses `json:"address"`
+		Note    string           `json:"note,omitempty"`
 	}
 	DepositTransaction struct {
 		FromChainID        string `json:"fromChainId"`

@@ -92,6 +92,15 @@ func (c *clientImpl) Teams(ctx context.Context, req *TeamsRequest) ([]Team, erro
 	return resp, err
 }
 
+func (c *clientImpl) TeamByID(ctx context.Context, id string) (*Team, error) {
+	if id == "" {
+		return nil, fmt.Errorf("id is required")
+	}
+	var resp Team
+	err := c.httpClient.Get(ctx, fmt.Sprintf("/teams/%s", id), nil, &resp)
+	return &resp, err
+}
+
 func (c *clientImpl) Sports(ctx context.Context) ([]SportsMetadata, error) {
 	var resp []SportsMetadata
 	err := c.httpClient.Get(ctx, "/sports", nil, &resp)

@@ -163,6 +163,24 @@ func (c *clientImpl) Status(ctx context.Context, req *StatusRequest) (StatusResp
 	return resp, err
 }
 
+func (c *clientImpl) Quote(ctx context.Context, req *BridgeQuoteRequest) (BridgeQuoteResponse, error) {
+	if req == nil {
+		return BridgeQuoteResponse{}, fmt.Errorf("quote request is required")
+	}
+	var resp BridgeQuoteResponse
+	err := c.httpClient.Post(ctx, "/quote", req, &resp)
+	return resp, err
+}
+
+func (c *clientImpl) WithdrawAddress(ctx context.Context, req *WithdrawAddressRequest) (WithdrawAddressResponse, error) {
+	if req == nil || req.Recipient == "" {
+		return WithdrawAddressResponse{}, fmt.Errorf("recipient is required")
+	}
+	var resp WithdrawAddressResponse
+	err := c.httpClient.Post(ctx, "/withdraw", req, &resp)
+	return resp, err
+}
+
 // Use unified error definitions from pkg/errors
 var (
 	ErrMissingBackend         = sdkerrors.ErrMissingBackend

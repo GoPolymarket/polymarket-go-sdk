@@ -18,4 +18,9 @@ type Client interface {
 	DepositAddress(ctx context.Context, req *DepositRequest) (DepositResponse, error)
 	SupportedAssetsInfo(ctx context.Context) (SupportedAssetsResponse, error)
 	Status(ctx context.Context, req *StatusRequest) (StatusResponse, error)
+
+	// Quote returns a bridge quote for a cross-chain transfer.
+	Quote(ctx context.Context, req *BridgeQuoteRequest) (BridgeQuoteResponse, error)
+	// WithdrawAddress creates bridge withdrawal addresses to send funds from a Polymarket wallet.
+	WithdrawAddress(ctx context.Context, req *WithdrawAddressRequest) (WithdrawAddressResponse, error)
 }

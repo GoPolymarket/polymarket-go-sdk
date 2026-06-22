@@ -501,3 +501,84 @@ func activityTypeStrings(vals []ActivityType) []string {
 	}
 	return out
 }
+
+func (c *clientImpl) AccountingSnapshot(ctx context.Context) ([]byte, error) {
+	var buf []byte
+	err := c.httpClient.Get(ctx, "/v1/accounting/snapshot", nil, &buf)
+	return buf, err
+}
+
+func (c *clientImpl) MarketPositions(ctx context.Context, req *MarketPositionsRequest) (MarketPositionsResponse, error) {
+	if req == nil {
+		return nil, ErrMissingRequest
+	}
+	q := url.Values{}
+	if req.Market != (common.Hash{}) {
+		q.Set("market", req.Market.Hex())
+	}
+	if req.User != nil {
+		q.Set("user", req.User.Hex())
+	}
+	if req.Status != nil {
+		q.Set("status", *req.Status)
+	}
+	if req.SortBy != nil {
+		q.Set("sortBy", *req.SortBy)
+	}
+	if req.SortDirection != nil {
+		q.Set("sortDirection", string(*req.SortDirection))
+	}
+	if req.Limit != nil {
+		q.Set("limit", fmt.Sprintf("%d", *req.Limit))
+	}
+	if req.Offset != nil {
+		q.Set("offset", fmt.Sprintf("%d", *req.Offset))
+	}
+	var resp MarketPositionsResponse
+	err := c.httpClient.Get(ctx, "/v1/market-positions", q, &resp)
+	return resp, err
+}
+
+func (c *clientImpl) ActivityCombos(ctx context.Context, req *ActivityCombosRequest) (ActivityCombosResponse, error) {
+	if req == nil {
+		return nil, ErrMissingRequest
+	}
+	q := url.Values{}
+	if req.User != (common.Address{}) {
+		q.Set("user", req.User.Hex())
+	}
+	if req.Limit != nil {
+		q.Set("limit", fmt.Sprintf("%d", *req.Limit))
+	}
+	if req.Offset != nil {
+		q.Set("offset", fmt.Sprintf("%d", *req.Offset))
+	}
+	if req.SortDirection != nil {
+		q.Set("sortDirection", string(*req.SortDirection))
+	}
+	var resp ActivityCombosResponse
+	err := c.httpClient.Get(ctx, "/v1/activity/combos", q, &resp)
+	return resp, err
+}
+
+func (c *clientImpl) PositionsCombos(ctx context.Context, req *PositionsCombosRequest) (PositionsCombosResponse, error) {
+	if req == nil {
+		return nil, ErrMissingRequest
+	}
+	q := url.Values{}
+	if req.User != (common.Address{}) {
+		q.Set("user", req.User.Hex())
+	}
+	if req.Limit != nil {
+		q.Set("limit", fmt.Sprintf("%d", *req.Limit))
+	}
+	if req.Offset != nil {
+		q.Set("offset", fmt.Sprintf("%d", *req.Offset))
+	}
+	if req.SortDirection != nil {
+		q.Set("sortDirection", string(*req.SortDirection))
+	}
+	var resp PositionsCombosResponse
+	err := c.httpClient.Get(ctx, "/v1/positions/combos", q, &resp)
+	return resp, err
+}
