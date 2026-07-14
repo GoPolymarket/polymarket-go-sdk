@@ -1,6 +1,7 @@
 package clob
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -75,9 +76,13 @@ func orderWithSignature(order *clobtypes.SignedOrder) (map[string]interface{}, e
 		return nil, fmt.Errorf("invalid order side %q", order.Order.Side)
 	}
 
-	// ponytail: V2 API wire body expects salt and timestamp as strings for all signature types.
+	// V2 API wire body: salt and timestamp are strings for non-POLY_1271 orders,
+	// but POLY_1271 (type 3) orders require salt as a JSON number for upstream compatibility.
 	salt := interface{}(u256String(order.Order.Salt))
 	timestamp := interface{}(fmt.Sprintf("%d", order.Order.Timestamp))
+	if sigType == 3 {
+		salt = json.Number(u256String(order.Order.Salt))
+	}
 
 	payload := map[string]interface{}{
 		"salt":          salt,
