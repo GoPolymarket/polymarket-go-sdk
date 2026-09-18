@@ -33,6 +33,9 @@ func (m *mockBackend) PendingCodeAt(ctx context.Context, account common.Address)
 func (m *mockBackend) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
 	return 0, nil
 }
+func (m *mockBackend) TransactionByHash(ctx context.Context, hash common.Hash) (*ethtypes.Transaction, bool, error) {
+	return nil, false, nil
+}
 func (m *mockBackend) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return big.NewInt(0), nil
 }
