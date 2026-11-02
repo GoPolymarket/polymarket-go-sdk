@@ -9,7 +9,7 @@ The SDK provides structured errors with error codes for programmatic handling:
 ```go
 import (
     "errors"
-    sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/pkg/errors"
+    sdkerrors "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/errors"
 )
 ```
 

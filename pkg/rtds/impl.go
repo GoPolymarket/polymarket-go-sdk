@@ -227,6 +227,9 @@ func (c *clientImpl) readLoop() error {
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
+			if c.closing.Load() {
+				return nil
+			}
 			logger.Error("rtds read error: %v", err)
 			c.setState(ConnectionDisconnected)
 			return err

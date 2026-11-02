@@ -39,7 +39,7 @@ Polymarket CLOB V2 于 2026年4月28日 上线，V1 SDK 不再受支持（关闭
 - `NextCursor` 字段添加到 Gamma `EventsRequest` / `MarketsRequest`
 
 ### 迁移指南
-1. 更新依赖: `go get github.com/GoPolymarket/polymarket-go-sdk@v2.0.0`
+1. 更新依赖: `go get github.com/GoPolymarket/polymarket-go-sdk/v2@v2.0.0`
 2. OrderBuilder: `FeeRateBps()`/`Nonce()`/`Taker()` → `Timestamp()`/`Metadata()`/`Builder()`
 3. 手动构建的 `Order` struct: 移除 `Taker`/`Nonce`/`FeeRateBps` 字段
 4. 重新生成 API key（V2 需要 v3 凭证）

@@ -20,7 +20,7 @@ This SDK provides native support for **AWS KMS (Key Management Service)**, allow
 The SDK handles the low-level cryptography required to convert AWS KMS's `ECDSA_SHA_256` output (ASN.1 encoded) into the Ethereum-standard 65-byte `[R || S || V]` format.
 
 ```go
-import "github.com/GoPolymarket/polymarket-go-sdk/pkg/auth/kms"
+import "github.com/GoPolymarket/polymarket-go-sdk/v2/pkg/auth/kms"
 
 // 1. Initialize AWS KMS Client
 cfg, _ := config.LoadDefaultConfig(ctx)

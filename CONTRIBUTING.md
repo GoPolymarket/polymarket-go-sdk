@@ -20,18 +20,17 @@ go test ./...
 
 ### Prerequisites
 
-- Go 1.21+
-- Docker (for integration tests)
-- Make
+- Go 1.26+
 
 ### Running Tests
 
 ```bash
 # Run all tests
-make test
+go test ./...
 
 # Run with coverage
-make coverage
+go test -coverprofile=coverage.out ./pkg/...
+go tool cover -func=coverage.out
 
 # Run benchmarks
 go test -bench=. ./pkg/clob/...
@@ -40,11 +39,11 @@ go test -bench=. ./pkg/clob/...
 ### Linting
 
 ```bash
-# Install golangci-lint
-make lint-install
+# Install the CI-pinned golangci-lint version
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 # Run linter
-make lint
+golangci-lint run ./...
 ```
 
 ## Code Standards
@@ -81,8 +80,8 @@ refactor: simplify error handling logic
 
 1. **Run tests**: `go test ./...`
 2. **Run linter**: `golangci-lint run ./...`
-3. **Check coverage**: `make coverage`
-4. **Format code**: `gofmt -w .`
+3. **Check coverage**: `go test -coverprofile=coverage.out ./pkg/...`
+4. **Format code**: `go fmt ./...`
 
 ### PR Description
 
