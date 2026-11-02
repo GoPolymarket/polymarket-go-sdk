@@ -35,9 +35,16 @@ jobs:
   vulnerabilities-scan:
     name: Vulnerabilities scan
     runs-on: ubuntu-latest
+    env:
+      DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: debricked/actions@v4
+      - uses: actions/checkout@v5
+      - name: Skip scan when Debricked token is unavailable
+        if: env.DEBRICKED_TOKEN == ''
+        run: echo "::warning::DEBRICKED_TOKEN is unavailable for this run; skipping Debricked scan."
+      - name: Run Debricked scan
+        if: env.DEBRICKED_TOKEN != ''
+        uses: debricked/actions@v4
         env:
-          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
+          GOFLAGS: -buildvcs=false
